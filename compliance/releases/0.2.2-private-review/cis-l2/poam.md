@@ -3,9 +3,9 @@
 StigForge docker verify (OpenSCAP). Policy-exempt rules are excluded from the score denominator.
 Failure buckets follow stigready `poam-from-arf.py` classification (N/A / risk-accepted / gap).
 
-**Score:** 94.05% (floor 90.0%) — meets floor
+**Score:** 87.36% (floor 90.0%) — below floor
 
-## OpenSCAP failures — classified (11)
+## OpenSCAP failures — classified (22)
 
 ### Gap - deterministic config (fixable in role) (5)
 
@@ -15,7 +15,7 @@ Failure buckets follow stigready `poam-from-arf.py` classification (N/A / risk-a
 - `accounts_passwords_pam_faillock_root_unlock_time`
 - `accounts_passwords_pam_faillock_unlock_time`
 
-### Gap - role vs SSG (scheduled remediation) (6)
+### Gap - role vs SSG (scheduled remediation) (17)
 
 - `account_disable_post_pw_expiration`
 - `accounts_maximum_age_login_defs`
@@ -23,6 +23,17 @@ Failure buckets follow stigready `poam-from-arf.py` classification (N/A / risk-a
 - `accounts_password_pam_pwhistory_enabled`
 - `accounts_password_pam_pwhistory_remember`
 - `accounts_password_pam_pwhistory_use_authtok`
+- `accounts_password_pam_pwquality_enabled`
+- `accounts_umask_etc_bashrc`
+- `accounts_umask_etc_login_defs`
+- `accounts_umask_etc_profile`
+- `disable_users_coredumps`
+- `ensure_pam_wheel_group_empty`
+- `file_permission_user_init_files`
+- `file_permissions_ungroupowned`
+- `package_pam_pwquality_installed`
+- `permissions_local_var_log`
+- `use_pam_wheel_group_for_su`
 
 ## Policy exempt — not scored (32)
 

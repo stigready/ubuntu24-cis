@@ -17,17 +17,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### Verified (OpenSCAP)
 
-- **`cis-l1`** — score **95.0%** (floor 90.0%) · gate **PASS** · evidence `20260728T093616Z`
-  - Remaining counted failures: `account_disable_post_pw_expiration, accounts_maximum_age_login_defs, accounts_password_pam_pwhistory_enabled, accounts_password_pam_pwhistory_enforce_root, accounts_password_pam_pwhistory_remember, accounts_password_pam_pwhistory_use_authtok, accounts_passwords_pam_faillock_deny, accounts_passwords_pam_faillock_enabled`
-  - _(+1 more — see `score.json`)_
-- **`cis-l2`** — score **94.05%** (floor 90.0%) · gate **PASS** · evidence `20260728T093804Z`
-  - Remaining counted failures: `account_disable_post_pw_expiration, accounts_maximum_age_login_defs, accounts_minimum_age_login_defs, accounts_password_pam_pwhistory_enabled, accounts_password_pam_pwhistory_enforce_root, accounts_password_pam_pwhistory_remember, accounts_password_pam_pwhistory_use_authtok, accounts_passwords_pam_faillock_deny`
-  - _(+3 more — see `score.json`)_
+- **`cis-l1`** — score **88.17%** (floor 90.0%) · gate **FAIL** · evidence `20260726T135932Z`
+  - Remaining counted failures: `account_disable_post_pw_expiration, accounts_maximum_age_login_defs, accounts_password_pam_pwhistory_enabled, accounts_password_pam_pwhistory_enforce_root, accounts_password_pam_pwhistory_remember, accounts_password_pam_pwhistory_use_authtok, accounts_password_pam_pwquality_enabled, accounts_passwords_pam_faillock_deny`
+  - _(+12 more — see `score.json`)_
+- **`cis-l2`** — score **87.36%** (floor 90.0%) · gate **FAIL** · evidence `20260726T135941Z`
+  - Remaining counted failures: `account_disable_post_pw_expiration, accounts_maximum_age_login_defs, accounts_minimum_age_login_defs, accounts_password_pam_pwhistory_enabled, accounts_password_pam_pwhistory_enforce_root, accounts_password_pam_pwhistory_remember, accounts_password_pam_pwhistory_use_authtok, accounts_password_pam_pwquality_enabled`
+  - _(+14 more — see `score.json`)_
 
 ### Provenance
 
-- Factory pipeline: https://github.com/stigready/stigforge/actions/runs/30348467615
-- Factory commit: `49f1c019fbf7ba7f8edc345d79321ed45f9534de`
+- Factory pipeline: https://github.com/stigready/stigforge/actions/runs/30353408831
+- Factory commit: `5601d6c388051bf9f7636b086d93888a709b8b31`
 
 ## [0.2.1-private-review] - 2026-07-28
 

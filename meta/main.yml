@@ -1,26 +1,33 @@
 galaxy_info:
   role_name: ubuntu24_cis
   namespace: stigready
-  description: "StigForge-owned ubuntu24_cis \u2014 ComplianceAsCode/SSG ansible remediation\
-    \ (BSD-3-Clause), cloud-tailored, verified by OpenSCAP.\n"
+  description: Ansible role for Ubuntu 24.04 LTS CIS Benchmark hardening (cis-l1,
+    cis-l2). ComplianceAsCode/SSG remediation, OpenSCAP-verified in StigForge CI.
+    Install with ansible-galaxy or git.
   license: BSD-3-Clause
   min_ansible_version: '2.16'
   platforms:
-  - name: EL
-    versions:
-    - '8'
-    - '9'
-    - '10'
   - name: Ubuntu
     versions:
     - '24.04'
   author: stigready
+  company: StigReady
   galaxy_tags:
+  - ansible
+  - ansible-role
   - cis
+  - cis-benchmark
+  - cis-hardening
   - compliance
+  - devsecops
   - hardening
+  - infrastructure
+  - noble
   - openscap
   - security
   - stigforge
   - ubuntu
+  - ubuntu2404
+  github_branch: main
+  issue_tracker_url: https://github.com/stigready/ubuntu24-cis/issues
 dependencies: []

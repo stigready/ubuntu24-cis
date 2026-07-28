@@ -1,1 +1,1 @@
-OpenSCAP: pass=174 fail=11 score=94.1% (target 90%)
+OpenSCAP: pass=152 fail=22 score=87.4% (target 90%)
