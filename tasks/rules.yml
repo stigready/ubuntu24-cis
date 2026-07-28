@@ -1,7 +1,0 @@
----
-# Per-rule tasks. Each task is tagged with the SSG rule_id and DISA stig_id when known.
-# Seeds come from ComplianceAsCode ansible fixes (BSD-3-Clause) — retain attribution.
-- name: StigForge role scaffold (no mapped rules yet)
-  ansible.builtin.debug:
-    msg: "Role ubuntu24_cis scaffold — run ingest/map/generate after SSG sync"
-  tags: [stigforge, scaffold]

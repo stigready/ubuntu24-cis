@@ -1,0 +1,27 @@
+{
+  "pass": 174,
+  "fail": 11,
+  "other": 0,
+  "total_scored": 185,
+  "score": 94.05,
+  "min_score": 90.0,
+  "meets_floor": true,
+  "gate_pass": true,
+  "enforce": false,
+  "failures": [
+    "account_disable_post_pw_expiration",
+    "accounts_maximum_age_login_defs",
+    "accounts_minimum_age_login_defs",
+    "accounts_password_pam_pwhistory_enabled",
+    "accounts_password_pam_pwhistory_enforce_root",
+    "accounts_password_pam_pwhistory_remember",
+    "accounts_password_pam_pwhistory_use_authtok",
+    "accounts_passwords_pam_faillock_deny",
+    "accounts_passwords_pam_faillock_enabled",
+    "accounts_passwords_pam_faillock_root_unlock_time",
+    "accounts_passwords_pam_faillock_unlock_time"
+  ],
+  "regressions": [],
+  "baseline": null,
+  "openscap_line": "OpenSCAP: pass=174 fail=11 score=94.1% (target 90%)"
+}

@@ -1,13 +1,26 @@
----
 galaxy_info:
   role_name: ubuntu24_cis
-  namespace: stigforge
-  description: StigForge-owned ubuntu24_cis — SSG-form Ansible verified by OpenSCAP
+  namespace: stigready
+  description: "StigForge-owned ubuntu24_cis \u2014 ComplianceAsCode/SSG ansible remediation\
+    \ (BSD-3-Clause), cloud-tailored, verified by OpenSCAP.\n"
   license: BSD-3-Clause
-  min_ansible_version: "2.16"
+  min_ansible_version: '2.16'
   platforms:
-    - name: EL
-      versions: ["8", "9", "10"]
-    - name: Ubuntu
-      versions: ["24.04"]
+  - name: EL
+    versions:
+    - '8'
+    - '9'
+    - '10'
+  - name: Ubuntu
+    versions:
+    - '24.04'
+  author: stigready
+  galaxy_tags:
+  - cis
+  - compliance
+  - hardening
+  - openscap
+  - security
+  - stigforge
+  - ubuntu
 dependencies: []
