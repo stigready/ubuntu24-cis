@@ -1,0 +1,6 @@
+stigforge_role: ubuntu24_cis
+stigforge_profile: cis-l1
+stigforge_rules_enabled: true
+stigforge_min_score: 90
+stigforge_ssg_datastream: ssg-ubuntu2404-ds.xml
+stigforge_ssg_profile: xccdf_org.ssgproject.content_profile_cis_level1_server
