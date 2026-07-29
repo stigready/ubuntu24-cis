@@ -1,0 +1,21 @@
+{
+  "pass": 180,
+  "fail": 5,
+  "other": 0,
+  "total_scored": 185,
+  "score": 97.3,
+  "min_score": 90.0,
+  "meets_floor": true,
+  "gate_pass": true,
+  "enforce": true,
+  "failures": [
+    "accounts_password_pam_pwhistory_remember",
+    "accounts_passwords_pam_faillock_deny",
+    "accounts_passwords_pam_faillock_enabled",
+    "accounts_passwords_pam_faillock_root_unlock_time",
+    "accounts_passwords_pam_faillock_unlock_time"
+  ],
+  "regressions": [],
+  "baseline": null,
+  "openscap_line": "OpenSCAP: pass=180 fail=5 score=97.3% (target 90%)"
+}

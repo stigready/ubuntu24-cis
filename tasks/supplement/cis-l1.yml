@@ -1,0 +1,97 @@
+# StigForge supplements for Ubuntu 24.04 CIS — not overwritten by `stigforge generate`.
+# SSG ansible gaps for PAM/login.defs in minimal docker verify (see ubuntu24_stig supplement).
+
+- name: StigForge supplement - set PASS_MAX_DAYS in /etc/login.defs (accounts_maximum_age_login_defs)
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: '^\s*PASS_MAX_DAYS\s+'
+    line: "PASS_MAX_DAYS   365"
+    state: present
+  tags:
+    - accounts_maximum_age_login_defs
+
+- name: StigForge supplement - set INACTIVE in /etc/default/useradd (account_disable_post_pw_expiration)
+  ansible.builtin.lineinfile:
+    path: /etc/default/useradd
+    regexp: '^\s*#?\s*INACTIVE='
+    line: "INACTIVE=30"
+    state: present
+    create: true
+  tags:
+    - account_disable_post_pw_expiration
+
+- name: StigForge supplement - ensure PAM runtime packages (CIS faillock/pwhistory prerequisites)
+  ansible.builtin.apt:
+    name:
+      - libpam-runtime
+      - libpam-modules
+      - libpam-pwquality
+    state: present
+  tags:
+    - accounts_passwords_pam_faillock_enabled
+    - accounts_password_pam_pwhistory_enabled
+
+- name: StigForge supplement - ensure /etc/security/faillock.conf exists
+  ansible.builtin.file:
+    path: /etc/security/faillock.conf
+    state: touch
+    mode: "0644"
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_passwords_pam_faillock_enabled
+    - accounts_passwords_pam_faillock_deny
+    - accounts_passwords_pam_faillock_unlock_time
+
+- name: StigForge supplement - set faillock deny (accounts_passwords_pam_faillock_deny)
+  ansible.builtin.lineinfile:
+    path: /etc/security/faillock.conf
+    regexp: '^\s*deny\s*='
+    line: "deny = 3"
+    state: present
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_passwords_pam_faillock_deny
+
+- name: StigForge supplement - set faillock unlock_time (accounts_passwords_pam_faillock_unlock_time)
+  ansible.builtin.lineinfile:
+    path: /etc/security/faillock.conf
+    regexp: '^\s*unlock_time\s*='
+    line: "unlock_time = 900"
+    state: present
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_passwords_pam_faillock_unlock_time
+
+- name: StigForge supplement - enable pam_faillock on common-auth (accounts_passwords_pam_faillock_enabled)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-auth
+    regexp: '^\s*auth\s+\[default=die\]\s+pam_faillock\.so'
+    line: "auth        [default=die] pam_faillock.so authfail"
+    state: present
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_passwords_pam_faillock_enabled
+
+- name: StigForge supplement - enable pam_faillock preauth on common-auth (accounts_passwords_pam_faillock_enabled)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-auth
+    regexp: '^\s*auth\s+required\s+pam_faillock\.so preauth'
+    line: "auth        required      pam_faillock.so preauth"
+    state: present
+    insertbefore: BOF
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_passwords_pam_faillock_enabled
+
+- name: StigForge supplement - enable pam_pwhistory on common-password (accounts_password_pam_pwhistory_enabled)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-password
+    regexp: '^\s*password\s+\S+\s+pam_pwhistory\.so'
+    line: "password    requisite                       pam_pwhistory.so remember=5 use_authtok enforce_for_root"
+    state: present
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_password_pam_pwhistory_enabled
+    - accounts_password_pam_pwhistory_remember
+    - accounts_password_pam_pwhistory_use_authtok
+    - accounts_password_pam_pwhistory_enforce_root

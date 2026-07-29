@@ -1,20 +1,20 @@
 {
   "role_name": "ubuntu24_cis",
-  "release": "0.2.2-private-review",
+  "release": "0.2.4-private-review",
   "min_score": 90.0,
   "family": "debian",
   "docker_image_tag": "stigready-prove-ubuntu24_cis",
-  "factory_commit": "5601d6c388051bf9f7636b086d93888a709b8b31",
+  "factory_commit": "c481b47d629f5bc2357a86a933aa6f94f5245fce",
   "profiles": {
     "cis-l1": {
       "xccdf_profile_id": "xccdf_org.ssgproject.content_profile_cis_level1_server",
       "ssg_datastream": "ssg-ubuntu2404-ds.xml",
-      "evidence_dir": "compliance/releases/0.2.2-private-review/cis-l1"
+      "evidence_dir": "compliance/releases/0.2.4-private-review/cis-l1"
     },
     "cis-l2": {
       "xccdf_profile_id": "xccdf_org.ssgproject.content_profile_cis_level2_server",
       "ssg_datastream": "ssg-ubuntu2404-ds.xml",
-      "evidence_dir": "compliance/releases/0.2.2-private-review/cis-l2"
+      "evidence_dir": "compliance/releases/0.2.4-private-review/cis-l2"
     }
   },
   "exempt_rules_file": "compliance/exempt-rules.txt"
