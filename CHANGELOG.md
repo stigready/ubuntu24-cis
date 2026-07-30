@@ -2,6 +2,23 @@
 
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [0.2.4] - 2026-07-30
+
+### Changed
+- StigForge export refresh for `ubuntu24_cis` at `0.2.4`.
+
+### Verified (OpenSCAP)
+
+- **`cis-l1`** — score **97.78%** (floor 90.0%) · gate **PASS** · evidence `20260729T223239Z`
+  - Remaining counted failures: `accounts_password_pam_pwhistory_remember, accounts_passwords_pam_faillock_deny, accounts_passwords_pam_faillock_enabled, accounts_passwords_pam_faillock_unlock_time`
+- **`cis-l2`** — score **97.3%** (floor 90.0%) · gate **PASS** · evidence `20260729T223543Z`
+  - Remaining counted failures: `accounts_password_pam_pwhistory_remember, accounts_passwords_pam_faillock_deny, accounts_passwords_pam_faillock_enabled, accounts_passwords_pam_faillock_root_unlock_time, accounts_passwords_pam_faillock_unlock_time`
+
+### Provenance
+
+- Factory pipeline: https://github.com/stigready/stigforge/actions/runs/30496236357
+- Factory commit: `7f7cafc85a392bf2a7eb04f1b979185dbcdf5530`
+
 ## [0.2.4-private-review] - 2026-07-29
 
 ### Changed
