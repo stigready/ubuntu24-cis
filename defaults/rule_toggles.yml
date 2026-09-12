@@ -19,6 +19,7 @@ ubuntu24cis_accounts_password_pam_ocredit: true
 ubuntu24cis_accounts_password_pam_pwhistory_enabled: true
 ubuntu24cis_accounts_password_pam_pwhistory_enforce_root: true
 ubuntu24cis_accounts_password_pam_ucredit: true
+ubuntu24cis_accounts_password_pam_unix_no_remember: true
 ubuntu24cis_accounts_password_set_min_life_existing: true
 ubuntu24cis_accounts_passwords_pam_faillock_deny: true
 ubuntu24cis_accounts_passwords_pam_faillock_enabled: true
@@ -93,6 +94,7 @@ ubuntu24cis_banner_etc_issue_cis: true
 ubuntu24cis_banner_etc_issue_net_cis: true
 ubuntu24cis_banner_etc_motd_cis: true
 ubuntu24cis_chronyd_configure_pool_and_server: true
+ubuntu24cis_directory_permissions_var_log_audit: true
 ubuntu24cis_disable_host_auth: true
 ubuntu24cis_disable_users_coredumps: true
 ubuntu24cis_ensure_pam_wheel_group_empty: true
@@ -125,6 +127,7 @@ ubuntu24cis_file_groupowner_etc_security_opasswd_old: true
 ubuntu24cis_file_groupowner_etc_shadow: true
 ubuntu24cis_file_groupowner_etc_shells: true
 ubuntu24cis_file_groupowner_sshd_config: true
+ubuntu24cis_file_groupowner_sshd_drop_in_config: true
 ubuntu24cis_file_groupowner_var_log_auth: true
 ubuntu24cis_file_groupowner_var_log_cloud_init: true
 ubuntu24cis_file_groupowner_var_log_journal: true
@@ -168,6 +171,7 @@ ubuntu24cis_file_owner_etc_shadow: true
 ubuntu24cis_file_owner_etc_shells: true
 ubuntu24cis_file_owner_grub2_cfg: true
 ubuntu24cis_file_owner_sshd_config: true
+ubuntu24cis_file_owner_sshd_drop_in_config: true
 ubuntu24cis_file_owner_var_log_auth: true
 ubuntu24cis_file_owner_var_log_cloud_init: true
 ubuntu24cis_file_owner_var_log_journal: true
@@ -186,6 +190,7 @@ ubuntu24cis_file_ownerships_var_log_gdm: true
 ubuntu24cis_file_ownerships_var_log_gdm3: true
 ubuntu24cis_file_ownerships_var_log_landscape: true
 ubuntu24cis_file_ownerships_var_log_sssd: true
+ubuntu24cis_file_permission_user_bash_history: true
 ubuntu24cis_file_permission_user_init_files: true
 ubuntu24cis_file_permissions_at_allow: true
 ubuntu24cis_file_permissions_at_deny: true
@@ -217,9 +222,11 @@ ubuntu24cis_file_permissions_etc_shells: true
 ubuntu24cis_file_permissions_grub2_cfg: true
 ubuntu24cis_file_permissions_home_directories: true
 ubuntu24cis_file_permissions_sshd_config: true
+ubuntu24cis_file_permissions_sshd_drop_in_config: true
 ubuntu24cis_file_permissions_sshd_private_key: true
 ubuntu24cis_file_permissions_sshd_pub_key: true
 ubuntu24cis_file_permissions_var_log_apt: true
+ubuntu24cis_file_permissions_var_log_audit: true
 ubuntu24cis_file_permissions_var_log_auth: true
 ubuntu24cis_file_permissions_var_log_gdm: true
 ubuntu24cis_file_permissions_var_log_gdm3: true
@@ -391,5 +398,4 @@ ubuntu24cis_sysctl_net_ipv6_conf_all_forwarding: true
 ubuntu24cis_sysctl_net_ipv6_conf_default_accept_ra: true
 ubuntu24cis_sysctl_net_ipv6_conf_default_accept_redirects: true
 ubuntu24cis_sysctl_net_ipv6_conf_default_accept_source_route: true
-ubuntu24cis_use_pam_wheel_group_for_su: true
 ubuntu24cis_wireless_disable_interfaces: true
