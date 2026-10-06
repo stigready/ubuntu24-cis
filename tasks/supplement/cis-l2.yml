@@ -1,4 +1,4 @@
-# StigForge supplements for Ubuntu 24.04 CIS L2 — includes cis-l1 gaps plus L2-only login/PAM rules.
+# StigForge supplements for Ubuntu 24.04 CIS L2 - includes cis-l1 gaps plus L2-only login/PAM rules.
 
 - name: StigForge supplement - set PASS_MAX_DAYS in /etc/login.defs (accounts_maximum_age_login_defs)
   ansible.builtin.lineinfile:

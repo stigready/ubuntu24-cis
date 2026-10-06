@@ -1,4 +1,4 @@
-# StigForge supplements for Ubuntu 24.04 CIS — not overwritten by `stigforge generate`.
+# StigForge supplements for Ubuntu 24.04 CIS - not overwritten by `stigforge generate`.
 # SSG ansible gaps for PAM/login.defs in minimal docker verify (see ubuntu24_stig supplement).
 
 - name: StigForge supplement - set PASS_MAX_DAYS in /etc/login.defs (accounts_maximum_age_login_defs)
