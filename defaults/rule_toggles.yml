@@ -36,7 +36,6 @@ ubuntu24cis_accounts_user_interactive_home_directory_exists: true
 ubuntu24cis_aide_build_database: true
 ubuntu24cis_aide_check_audit_tools: true
 ubuntu24cis_aide_periodic_checking_systemd_timer: true
-ubuntu24cis_always: true
 ubuntu24cis_audit_rules_dac_modification_chmod: true
 ubuntu24cis_audit_rules_dac_modification_chown: true
 ubuntu24cis_audit_rules_dac_modification_fchmod: true

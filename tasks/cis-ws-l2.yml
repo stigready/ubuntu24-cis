@@ -1,18 +1,19 @@
 # Source: ComplianceAsCode/content (scap-security-guide) - BSD-3-Clause
 # Imported by StigForge; cloud-breaker tasks stripped per policy/cloud-ami.yml
 ---
-- block:
-  - name: Gather the package facts
-    ansible.builtin.package_facts:
-      manager: auto
-    tags:
-    - always
-  rescue:
-  - name: 'StigForge: continue after error in ''Gather the package facts'' (OpenSCAP is the score gate)'
-    ansible.builtin.debug:
-      msg: 'StigForge: ''Gather the package facts'' raised an error (module or templating) and was skipped; continuing so
-        later rules still run. OpenSCAP evaluates the resulting system state independently.'
-  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_always | default(true) | bool)
+- name: 'StigForge: gather package facts before any rule reads them (stigforge#82)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - always
+  - stigforge
+  - facts
+- name: 'StigForge: gather service facts before any rule reads them (stigforge#82)'
+  ansible.builtin.service_facts: null
+  tags:
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure prelink is Removed
     ansible.builtin.package:
@@ -55,6 +56,14 @@
       msg: 'StigForge: ''Ensure aide is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_aide_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure aide is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Configure AIDE to Verify the Audit Tools - Ensure AIDE is Installed
     ansible.builtin.package:
@@ -80,6 +89,15 @@
       msg: 'StigForge: ''Configure AIDE to Verify the Audit Tools - Ensure AIDE is Installed'' raised an error (module or
         templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_aide_check_audit_tools | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Configure AIDE to Verify the Audit Tools - Ensure AIDE is Installed'' installed
+    a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure sudo is installed
     ansible.builtin.package:
@@ -102,6 +120,14 @@
       msg: 'StigForge: ''Ensure sudo is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_sudo_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure sudo is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure libpam-modules is installed
     ansible.builtin.package:
@@ -122,6 +148,14 @@
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_pam_modules_installed | default(true) |
     bool)
+- name: 'StigForge: refresh package facts after ''Ensure libpam-modules is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure libpam-pwquality is installed
     ansible.builtin.package:
@@ -143,6 +177,14 @@
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_pam_pwquality_installed | default(true)
     | bool)
+- name: 'StigForge: refresh package facts after ''Ensure libpam-pwquality is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure libpam-runtime is installed
     ansible.builtin.package:
@@ -162,6 +204,14 @@
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_pam_runtime_installed | default(true) |
     bool)
+- name: 'StigForge: refresh package facts after ''Ensure libpam-runtime is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure apparmor-utils is installed
     ansible.builtin.package:
@@ -180,6 +230,14 @@
     ansible.builtin.debug:
       msg: 'StigForge: ''Ensure apparmor-utils is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+- name: 'StigForge: refresh package facts after ''Ensure apparmor-utils is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure apparmor is installed
     ansible.builtin.package:
@@ -200,6 +258,14 @@
       msg: 'StigForge: ''Ensure apparmor is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_apparmor_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure apparmor is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure rsyslog is installed
     ansible.builtin.package:
@@ -220,6 +286,14 @@
       msg: 'StigForge: ''Ensure rsyslog is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_rsyslog_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure rsyslog is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure systemd-journal-remote is installed
     ansible.builtin.package:
@@ -238,6 +312,14 @@
     ansible.builtin.debug:
       msg: 'StigForge: ''Ensure systemd-journal-remote is installed'' raised an error (module or templating) and was skipped;
         continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+- name: 'StigForge: refresh package facts after ''Ensure systemd-journal-remote is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure iptables-persistent is installed
     ansible.builtin.package:
@@ -258,6 +340,14 @@
     ansible.builtin.debug:
       msg: 'StigForge: ''Ensure iptables-persistent is installed'' raised an error (module or templating) and was skipped;
         continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+- name: 'StigForge: refresh package facts after ''Ensure iptables-persistent is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure iptables is installed
     ansible.builtin.package:
@@ -281,6 +371,14 @@
       msg: 'StigForge: ''Ensure iptables is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_iptables_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure iptables is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: 'Remove iptables-persistent Package: Ensure iptables-persistent is removed'
     ansible.builtin.package:
@@ -324,6 +422,14 @@
       msg: 'StigForge: ''Ensure nftables is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_nftables_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure nftables is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure ufw is installed
     ansible.builtin.package:
@@ -346,6 +452,14 @@
       msg: 'StigForge: ''Ensure ufw is installed'' raised an error (module or templating) and was skipped; continuing so later
         rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_ufw_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure ufw is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure ufw is removed
     ansible.builtin.package:
@@ -429,6 +543,14 @@
       msg: 'StigForge: ''Ensure cron is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_cron_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure cron is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: 'Uninstall the nis package: Ensure nis is removed'
     ansible.builtin.package:
@@ -743,6 +865,14 @@
       msg: 'StigForge: ''Ensure chrony is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_chrony_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure chrony is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure systemd-timesyncd is installed
     ansible.builtin.package:
@@ -766,6 +896,14 @@
       msg: 'StigForge: ''Ensure systemd-timesyncd is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_timesyncd_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure systemd-timesyncd is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - high_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: 'Uninstall rsync Package: Ensure rsync is removed'
     ansible.builtin.package:
@@ -1042,6 +1180,14 @@
     ansible.builtin.debug:
       msg: 'StigForge: ''Ensure audispd-plugins is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+- name: 'StigForge: refresh package facts after ''Ensure audispd-plugins is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Ensure auditd is installed
     ansible.builtin.package:
@@ -1072,18 +1218,14 @@
       msg: 'StigForge: ''Ensure auditd is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_audit_installed | default(true) | bool)
-- block:
-  - name: Gather the package facts
-    ansible.builtin.package_facts:
-      manager: auto
-    tags:
-    - always
-  rescue:
-  - name: 'StigForge: continue after error in ''Gather the package facts'' (OpenSCAP is the score gate)'
-    ansible.builtin.debug:
-      msg: 'StigForge: ''Gather the package facts'' raised an error (module or templating) and was skipped; continuing so
-        later rules still run. OpenSCAP evaluates the resulting system state independently.'
-  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_always | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Ensure auditd is installed'' installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Enable rsyslog Service - Enable service rsyslog
     block:
@@ -2319,17 +2461,6 @@
         continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_service_auditd_enabled | default(true) | bool)
 - block:
-  - name: Gather the service facts
-    ansible.builtin.service_facts: null
-    tags:
-    - always
-  rescue:
-  - name: 'StigForge: continue after error in ''Gather the service facts'' (OpenSCAP is the score gate)'
-    ansible.builtin.debug:
-      msg: 'StigForge: ''Gather the service facts'' raised an error (module or templating) and was skipped; continuing so
-        later rules still run. OpenSCAP evaluates the resulting system state independently.'
-  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_always | default(true) | bool)
-- block:
   - name: Check If Prelinked Is Installed
     ansible.builtin.stat:
       path: /usr/sbin/prelink
@@ -2391,6 +2522,15 @@
       msg: 'StigForge: ''Build and Test AIDE Database - Ensure AIDE Is Installed'' raised an error (module or templating)
         and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_aide_build_database | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Build and Test AIDE Database - Ensure AIDE Is Installed'' installed a package
+    (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - medium_severity
+  - always
+  - stigforge
+  - facts
 - block:
   - name: Build and Test AIDE Database - Check if DB Path in /etc/aide/aide.conf Is Already Set
     ansible.builtin.lineinfile:

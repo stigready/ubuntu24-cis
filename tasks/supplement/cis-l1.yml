@@ -62,23 +62,83 @@
   tags:
     - accounts_passwords_pam_faillock_unlock_time
 
-- name: StigForge supplement - enable pam_faillock on common-auth (accounts_passwords_pam_faillock_enabled)
-  ansible.builtin.lineinfile:
-    path: /etc/pam.d/common-auth
-    regexp: '^\s*auth\s+\[default=die\]\s+pam_faillock\.so'
-    line: "auth        [default=die] pam_faillock.so authfail"
-    state: present
+# accounts_passwords_pam_faillock_enabled -- CIS Ubuntu 24.04 5.3.2.2 / Debian 12 5.3.2.2:
+# "Ensure pam_faillock module is enabled". The CIS remediation on Debian-family is two
+# pam-auth-update profiles, not edits to common-auth. The previous version of this supplement
+# appended `[default=die] pam_faillock.so authfail` to the END of common-auth (lineinfile with
+# no insert anchor), which is AFTER pam_permit on the success path: a correct password
+# reached authfail, was recorded as a failure, and the stack died. Every password
+# authentication failed (sudo -S, su, console) -- stigforge#84, found by the stigvalidated
+# lane on 2026-09-24. The SSG OVAL check only requires preauth...pam_unix...authfail in that
+# order anywhere in the file, so the broken file scored as a pass.
+#
+# pam-auth-update places the entries by Priority inside the Primary block: preauth (1024)
+# before pam_unix (256), authfail (0) immediately after it, and `account required
+# pam_faillock.so` in common-account. That is the stack CIS describes and the one that
+# lets a correct password through.
+- name: StigForge supplement - pam-auth-update profile for pam_faillock authfail (accounts_passwords_pam_faillock_enabled)
+  ansible.builtin.copy:
+    dest: /usr/share/pam-configs/faillock
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Name: Enable pam_faillock to deny access
+      Default: yes
+      Priority: 0
+      Auth-Type: Primary
+      Auth:
+      	[default=die] pam_faillock.so authfail
   when: '"libpam-runtime" in ansible_facts.packages'
   tags:
     - accounts_passwords_pam_faillock_enabled
 
-- name: StigForge supplement - enable pam_faillock preauth on common-auth (accounts_passwords_pam_faillock_enabled)
+- name: StigForge supplement - pam-auth-update profile for pam_faillock preauth + account (accounts_passwords_pam_faillock_enabled)
+  ansible.builtin.copy:
+    dest: /usr/share/pam-configs/faillock_notify
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      Name: Notify of failed login attempts and reset count upon success
+      Default: yes
+      Priority: 1024
+      Auth-Type: Primary
+      Auth:
+      	requisite pam_faillock.so preauth
+      Account-Type: Primary
+      Account:
+      	required pam_faillock.so
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_passwords_pam_faillock_enabled
+
+- name: StigForge supplement - remove the end-of-file authfail line an earlier supplement appended (accounts_passwords_pam_faillock_enabled)
+  # Only a line OUTSIDE pam-auth-update's managed block is ours to remove; the managed one
+  # is indented by pam-auth-update and sits between its "# here are the per-package modules"
+  # markers. The old lineinfile wrote it flush-left at EOF, after pam_permit/pam_cap.
   ansible.builtin.lineinfile:
     path: /etc/pam.d/common-auth
-    regexp: '^\s*auth\s+required\s+pam_faillock\.so preauth'
-    line: "auth        required      pam_faillock.so preauth"
-    state: present
-    insertbefore: BOF
+    regexp: '^auth\s+\[default=die\]\s+pam_faillock\.so authfail\s*$'
+    state: absent
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_passwords_pam_faillock_enabled
+
+- name: StigForge supplement - remove the BOF preauth line an earlier supplement inserted (accounts_passwords_pam_faillock_enabled)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-auth
+    regexp: '^auth\s+required\s+pam_faillock\.so preauth\s*$'
+    state: absent
+  when: '"libpam-runtime" in ansible_facts.packages'
+  tags:
+    - accounts_passwords_pam_faillock_enabled
+
+- name: StigForge supplement - enable the faillock profiles with pam-auth-update (accounts_passwords_pam_faillock_enabled)
+  ansible.builtin.command:
+    cmd: pam-auth-update --package --enable faillock faillock_notify
+  register: stigforge_pam_auth_update_faillock
+  changed_when: stigforge_pam_auth_update_faillock.rc == 0
   when: '"libpam-runtime" in ansible_facts.packages'
   tags:
     - accounts_passwords_pam_faillock_enabled
