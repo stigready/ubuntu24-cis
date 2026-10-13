@@ -2,7 +2,7 @@
 
 **Ansible hardening role** for **Ubuntu 24.04 LTS** (CIS Benchmark). Suitable for playbooks, Packer/Ansible provisioners, and golden-image pipelines. Search keywords: `ansible`, `ansible-role`, `cis`, `cis-benchmark`, `cis-hardening`, `compliance`, `devsecops`, `hardening`, `infrastructure`, `noble`, `openscap`, `security`, `stigforge`, `ubuntu`.
 
-StigForge-exported Ansible role **`ubuntu24_cis`** · release **`0.3.5`**.
+StigForge-exported Ansible role **`ubuntu24_cis`** · release **`0.3.6`**.
 Matrix cell status: **`green`**.
 
 ## Install (Ansible Galaxy)
@@ -13,7 +13,7 @@ lives under `compliance/` and is not loaded when the role runs.
 From **Ansible Galaxy** (after import; namespace `stigready`):
 
 ```bash
-ansible-galaxy role install stigready.ubuntu24_cis,0.3.5
+ansible-galaxy role install stigready.ubuntu24_cis,0.3.6
 ```
 
 From **GitHub** (public):
@@ -23,7 +23,7 @@ From **GitHub** (public):
 roles:
   - src: https://github.com/stigready/ubuntu24-cis
     scm: git
-    version: v0.3.5   # or an immutable commit SHA
+    version: v0.3.6   # or an immutable commit SHA
     name: ubuntu24_cis
 ```
 
@@ -39,7 +39,7 @@ Evidence was produced by **docker verify + OpenSCAP** on the factory CI run cite
 | Profile | Score | Floor | Gate | Ansible | Evidence tested (UTC) |
 |---|---:|---:|---|---|---|
 
-Full artifacts per profile: `compliance/releases/0.3.5/<profile>/` (`score.json`, `results.xml`, `arf.xml`, `evidence.json`, `evidence-report.html`, `poam.md`).
+Full artifacts per profile: `compliance/releases/0.3.6/<profile>/` (`score.json`, `results.xml`, `arf.xml`, `evidence.json`, `evidence-report.html`, `poam.md`).
 
 ## Reports & review
 
@@ -52,7 +52,7 @@ Full artifacts per profile: `compliance/releases/0.3.5/<profile>/` (`score.json`
 Re-run OpenSCAP in Docker and compare to this release's evidence:
 
 ```bash
-make prove RELEASE=0.3.5
+make prove RELEASE=0.3.6
 ```
 
 Or score your own `results.xml`: see **[compliance/README.md](compliance/README.md)**.
@@ -64,7 +64,7 @@ Or score your own `results.xml`: see **[compliance/README.md](compliance/README.
 
 ## Factory
 
-- Monorepo: [stigready/stigforge](https://github.com/stigready/stigforge) @ `336dce42410a74ebf84c3ffdfeeaa46ec14a7108`
-- CI run: https://github.com/stigready/stigforge/actions/runs/38329301726
+- Monorepo: [stigready/stigforge](https://github.com/stigready/stigforge) @ `02902407784d466753ecdaf97fa5db4040c623b5`
+- CI run: https://github.com/stigready/stigforge/actions/runs/38350247629
 - Catalog: [https://stigready.com/#stigforge](https://stigready.com/#stigforge)
 
