@@ -358,3 +358,15 @@
       export TMOUT
   tags:
     - accounts_tmout
+
+# nftables_rules_permanent (CIS 4.3): /etc/nftables.conf must exist. The image carried no nftables at all
+# (ubuntu-24.04:cis-l1 2026-10-13, OVAL test_etc_nftables_conf_file false). The package ships /etc/nftables.conf with an
+# accept-all default and leaves nftables.service disabled, so installing it changes no network behaviour: customers
+# keep EC2 security groups as the perimeter and layer their own ruleset on top. A default-deny host ruleset would be a
+# cloud-usability decision (it can lock out the cloud user), which is not made here.
+- name: Install nftables so /etc/nftables.conf exists (nftables_rules_permanent)
+  ansible.builtin.apt:
+    name: nftables
+    state: present
+  tags:
+    - nftables_rules_permanent

@@ -50183,3 +50183,26 @@
       msg: 'StigForge: ''Define a read-only TMOUT for login shells (accounts_tmout)'' raised an error (module or templating)
         and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_tmout | default(true) | bool)
+- block:
+  - name: Install nftables so /etc/nftables.conf exists (nftables_rules_permanent)
+    ansible.builtin.apt:
+      name: nftables
+      state: present
+    tags:
+    - nftables_rules_permanent
+  rescue:
+  - name: 'StigForge: continue after error in ''Install nftables so /etc/nftables.conf exists (nftables_rules_permanent)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Install nftables so /etc/nftables.conf exists (nftables_rules_permanent)'' raised an error (module
+        or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
+        independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_rules_permanent | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Install nftables so /etc/nftables.conf exists (nftables_rules_permanent)''
+    installed a package (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - always
+  - stigforge
+  - facts

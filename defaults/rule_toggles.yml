@@ -274,6 +274,7 @@ ubuntu24cis_mount_option_var_nosuid: true
 ubuntu24cis_mount_option_var_tmp_nodev: true
 ubuntu24cis_mount_option_var_tmp_noexec: true
 ubuntu24cis_mount_option_var_tmp_nosuid: true
+ubuntu24cis_nftables_rules_permanent: true
 ubuntu24cis_no_empty_passwords_etc_shadow: true
 ubuntu24cis_no_empty_passwords_unix: true
 ubuntu24cis_package_aide_installed: true
