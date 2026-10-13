@@ -20,6 +20,7 @@ ubuntu24cis_accounts_password_pam_pwhistory_enabled: true
 ubuntu24cis_accounts_password_pam_pwhistory_enforce_root: true
 ubuntu24cis_accounts_password_pam_ucredit: true
 ubuntu24cis_accounts_password_pam_unix_no_remember: true
+ubuntu24cis_accounts_password_set_max_life_existing: true
 ubuntu24cis_accounts_password_set_min_life_existing: true
 ubuntu24cis_accounts_passwords_pam_faillock_deny: true
 ubuntu24cis_accounts_passwords_pam_faillock_enabled: true
@@ -237,6 +238,7 @@ ubuntu24cis_file_permissions_var_log_sssd: true
 ubuntu24cis_file_permissions_var_log_syslog: true
 ubuntu24cis_file_permissions_var_log_waagent: true
 ubuntu24cis_file_permissions_var_log_wbtmp: true
+ubuntu24cis_grub2_enable_apparmor: true
 ubuntu24cis_journald_compress: true
 ubuntu24cis_journald_disable_forward_to_syslog: true
 ubuntu24cis_journald_forward_to_syslog: true
@@ -272,6 +274,7 @@ ubuntu24cis_mount_option_var_tmp_nodev: true
 ubuntu24cis_mount_option_var_tmp_noexec: true
 ubuntu24cis_mount_option_var_tmp_nosuid: true
 ubuntu24cis_no_empty_passwords_etc_shadow: true
+ubuntu24cis_no_empty_passwords_unix: true
 ubuntu24cis_package_aide_installed: true
 ubuntu24cis_package_apparmor_installed: true
 ubuntu24cis_package_audit_installed: true
@@ -312,6 +315,7 @@ ubuntu24cis_package_vsftpd_removed: true
 ubuntu24cis_package_xinetd_removed: true
 ubuntu24cis_package_ypserv_removed: true
 ubuntu24cis_permissions_local_var_log: true
+ubuntu24cis_postfix_network_listening_disabled: true
 ubuntu24cis_rsyslog_filecreatemode: true
 ubuntu24cis_rsyslog_nolisten: true
 ubuntu24cis_service_apport_disabled: true
@@ -359,6 +363,7 @@ ubuntu24cis_sshd_disable_root_login: true
 ubuntu24cis_sshd_do_not_permit_user_env: true
 ubuntu24cis_sshd_enable_pam: true
 ubuntu24cis_sshd_enable_warning_banner_net: true
+ubuntu24cis_sshd_limit_user_access: true
 ubuntu24cis_sshd_set_idle_timeout: true
 ubuntu24cis_sshd_set_keepalive: true
 ubuntu24cis_sshd_set_login_grace_time: true
@@ -366,11 +371,13 @@ ubuntu24cis_sshd_set_loglevel_info: true
 ubuntu24cis_sshd_set_max_auth_tries: true
 ubuntu24cis_sshd_set_max_sessions: true
 ubuntu24cis_sshd_set_maxstartups: true
+ubuntu24cis_sshd_use_strong_ciphers: true
 ubuntu24cis_sshd_use_strong_kex: true
 ubuntu24cis_sshd_use_strong_macs: true
 ubuntu24cis_sudo_add_use_pty: true
 ubuntu24cis_sudo_custom_logfile: true
 ubuntu24cis_sudo_remove_no_authenticate: true
+ubuntu24cis_sudo_require_reauthentication: true
 ubuntu24cis_sysctl_fs_suid_dumpable: true
 ubuntu24cis_sysctl_kernel_randomize_va_space: true
 ubuntu24cis_sysctl_kernel_yama_ptrace_scope: true
@@ -397,4 +404,5 @@ ubuntu24cis_sysctl_net_ipv6_conf_all_forwarding: true
 ubuntu24cis_sysctl_net_ipv6_conf_default_accept_ra: true
 ubuntu24cis_sysctl_net_ipv6_conf_default_accept_redirects: true
 ubuntu24cis_sysctl_net_ipv6_conf_default_accept_source_route: true
+ubuntu24cis_use_pam_wheel_group_for_su: true
 ubuntu24cis_wireless_disable_interfaces: true

@@ -174,3 +174,139 @@
     - accounts_password_pam_pwhistory_remember
     - accounts_password_pam_pwhistory_use_authtok
     - accounts_password_pam_pwhistory_enforce_root
+
+# ---- 2026-10-13 ubuntu-24.04:cis-l1 prove-out (OpenSCAP 95.0%, 15 non-exempt failures). Each task below is
+# the real remediation for one rule the generated body did not satisfy; the ARF named the failing OVAL test.
+
+# use_pam_wheel_group_for_su (CIS 5.3.7): su restricted to a dedicated group.
+- name: Ensure the group used by pam_wheel for su exists
+  ansible.builtin.group:
+    name: sugroup
+    state: present
+  tags:
+    - use_pam_wheel_group_for_su
+
+- name: Restrict su to the sugroup group with pam_wheel (use_pam_wheel_group_for_su)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/su
+    regexp: '^\s*auth\s+required\s+pam_wheel\.so'
+    line: 'auth       required   pam_wheel.so use_uid group=sugroup'
+    insertafter: '^#?\s*auth\s+required\s+pam_wheel\.so'
+    state: present
+  tags:
+    - use_pam_wheel_group_for_su
+
+# sshd_limit_user_access: deny root by name (the same conservative form proven on the EL cells; an
+# AllowGroups list would lock out customer users).
+- name: Limit sshd user access by denying root by name (sshd_limit_user_access)
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\s*DenyUsers\s'
+    line: 'DenyUsers root'
+    insertbefore: '^\s*Match\s'
+    firstmatch: true
+    state: present
+    validate: /usr/sbin/sshd -t -f %s
+  tags:
+    - sshd_limit_user_access
+
+# sshd_use_strong_ciphers (CIS 5.1.6): an explicit Ciphers list of approved algorithms.
+- name: Set the approved sshd Ciphers (sshd_use_strong_ciphers)
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\s*Ciphers\s'
+    line: 'Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'
+    insertbefore: '^\s*Match\s'
+    firstmatch: true
+    state: present
+    validate: /usr/sbin/sshd -t -f %s
+  tags:
+    - sshd_use_strong_ciphers
+
+# no_empty_passwords_unix: `nullok` lets an account with an empty password authenticate. It comes from the
+# pam-auth-update `unix` profile, so remove it there too or the next pam-auth-update run puts it back.
+- name: Remove nullok from the pam-auth-update unix profile (no_empty_passwords_unix)
+  ansible.builtin.replace:
+    path: /usr/share/pam-configs/unix
+    regexp: '(pam_unix\.so[^\n]*?)[ \t]+nullok'
+    replace: '\1'
+  tags:
+    - no_empty_passwords_unix
+
+- name: Remove nullok from the generated PAM stacks (no_empty_passwords_unix)
+  ansible.builtin.replace:
+    path: '{{ item }}'
+    regexp: '(pam_unix\.so[^\n]*?)[ \t]+nullok'
+    replace: '\1'
+  loop:
+    - /etc/pam.d/common-auth
+    - /etc/pam.d/common-password
+    - /etc/pam.d/common-account
+  tags:
+    - no_empty_passwords_unix
+
+# postfix_network_listening_disabled / has_nonlocal_mta: a local-only MTA must not listen on 0.0.0.0:25.
+- name: Make postfix listen on loopback only (postfix_network_listening_disabled)
+  ansible.builtin.lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^\s*inet_interfaces\s*='
+    line: 'inet_interfaces = loopback-only'
+    state: present
+  register: stigforge_postfix_loopback
+  when: '"postfix" in ansible_facts.packages'
+  tags:
+    - postfix_network_listening_disabled
+    - has_nonlocal_mta
+
+- name: Restart postfix so it stops listening on external interfaces (has_nonlocal_mta)
+  ansible.builtin.service:
+    name: postfix
+    state: restarted
+  when:
+    - '"postfix" in ansible_facts.packages'
+    - stigforge_postfix_loopback is changed
+  tags:
+    - postfix_network_listening_disabled
+    - has_nonlocal_mta
+
+# accounts_password_set_max_life_existing: existing accounts that already have a password carry the same
+# maximum age as login.defs (PASS_MAX_DAYS 365 is set above, but useradd only applies it to NEW accounts).
+- name: Set the maximum password age on existing accounts with a password (accounts_password_set_max_life_existing)
+  ansible.builtin.shell:
+    cmd: |
+      for u in $(awk -F: -v max={{ var_accounts_maximum_age_login_defs | default('365') }} '$2 !~ /^[!*]/ && $2 != "" && $5 != max {print $1}' /etc/shadow); do
+        chage --maxdays {{ var_accounts_maximum_age_login_defs | default('365') }} "$u" && echo "changed $u"
+      done
+    executable: /bin/bash
+  register: stigforge_max_life
+  changed_when: "'changed ' in stigforge_max_life.stdout"
+  tags:
+    - accounts_password_set_max_life_existing
+
+# grub2_enable_apparmor (CIS 1.3.1.2): AppArmor is enabled on the kernel command line.
+- name: Enable AppArmor on the kernel command line - apparmor=1 (grub2_enable_apparmor)
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX=")(?!(?:[^"]*\s)?apparmor=1(?:\s|"))([^"]*)"$'
+    line: '\1\2 apparmor=1"'
+    backrefs: true
+  register: stigforge_grub_apparmor1
+  tags:
+    - grub2_enable_apparmor
+
+- name: Enable AppArmor on the kernel command line - security=apparmor (grub2_enable_apparmor)
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX=")(?!(?:[^"]*\s)?security=apparmor(?:\s|"))([^"]*)"$'
+    line: '\1\2 security=apparmor"'
+    backrefs: true
+  register: stigforge_grub_apparmor2
+  tags:
+    - grub2_enable_apparmor
+
+- name: Regenerate the GRUB configuration after the AppArmor change (grub2_enable_apparmor)
+  ansible.builtin.command: update-grub
+  when: stigforge_grub_apparmor1 is changed or stigforge_grub_apparmor2 is changed
+  changed_when: true
+  tags:
+    - grub2_enable_apparmor

@@ -3018,6 +3018,156 @@
         and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_sudo_remove_no_authenticate | default(true) | bool)
 - block:
+  - name: Require Re-Authentication When Using the sudo Command - Find /etc/sudoers.d/* files containing 'Defaults timestamp_timeout'
+    ansible.builtin.find:
+      path: /etc/sudoers.d
+      patterns: '*'
+      contains: ^[\s]*Defaults\s.*\btimestamp_timeout[\s]*=.*
+    register: sudoers_d_defaults_timestamp_timeout
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"sudo" in ansible_facts.packages'
+    tags:
+    - NIST-800-53-IA-11
+    - PCI-DSSv4-2.2
+    - PCI-DSSv4-2.2.6
+    - low_complexity
+    - low_disruption
+    - medium_severity
+    - no_reboot_needed
+    - restrict_strategy
+    - sudo_require_reauthentication
+  rescue:
+  - name: 'StigForge: continue after error in "Require Re-Authentication When Using the sudo Command - Find /etc/sudoers.d/*
+      files containing ''Defaults timestamp_timeout''" (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: "Require Re-Authentication When Using the sudo Command - Find /etc/sudoers.d/* files containing ''Defaults
+        timestamp_timeout''" raised an error (module or templating) and was skipped; continuing so later rules still run.
+        OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_sudo_require_reauthentication | default(true) |
+    bool)
+- block:
+  - name: Require Re-Authentication When Using the sudo Command - Remove 'Defaults timestamp_timeout' from /etc/sudoers.d/*
+      files
+    ansible.builtin.lineinfile:
+      path: '{{ item.path }}'
+      regexp: ^[\s]*Defaults\s.*\btimestamp_timeout[\s]*=.*
+      state: absent
+    with_items: '{{ sudoers_d_defaults_timestamp_timeout.files }}'
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"sudo" in ansible_facts.packages'
+    tags:
+    - NIST-800-53-IA-11
+    - PCI-DSSv4-2.2
+    - PCI-DSSv4-2.2.6
+    - low_complexity
+    - low_disruption
+    - medium_severity
+    - no_reboot_needed
+    - restrict_strategy
+    - sudo_require_reauthentication
+  rescue:
+  - name: 'StigForge: continue after error in "Require Re-Authentication When Using the sudo Command - Remove ''Defaults timestamp_timeout''
+      from /etc/sudoers.d/* files" (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: "Require Re-Authentication When Using the sudo Command - Remove ''Defaults timestamp_timeout'' from
+        /etc/sudoers.d/* files" raised an error (module or templating) and was skipped; continuing so later rules still run.
+        OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_sudo_require_reauthentication | default(true) |
+    bool)
+- block:
+  - name: Require Re-Authentication When Using the sudo Command - Ensure timestamp_timeout has the appropriate value in /etc/sudoers
+    ansible.builtin.lineinfile:
+      path: /etc/sudoers
+      regexp: ^[\s]*Defaults\s(.*)\btimestamp_timeout[\s]*=[\s]*[-]?\w+\b(.*)$
+      line: Defaults \1timestamp_timeout={{ var_sudo_timestamp_timeout }}\2
+      validate: /usr/sbin/visudo -cf %s
+      backrefs: true
+    register: edit_sudoers_timestamp_timeout_option
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"sudo" in ansible_facts.packages'
+    tags:
+    - NIST-800-53-IA-11
+    - PCI-DSSv4-2.2
+    - PCI-DSSv4-2.2.6
+    - low_complexity
+    - low_disruption
+    - medium_severity
+    - no_reboot_needed
+    - restrict_strategy
+    - sudo_require_reauthentication
+  rescue:
+  - name: 'StigForge: continue after error in ''Require Re-Authentication When Using the sudo Command - Ensure timestamp_timeout
+      has the appropriate value in /etc/sudoers'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Require Re-Authentication When Using the sudo Command - Ensure timestamp_timeout has the appropriate
+        value in /etc/sudoers'' raised an error (module or templating) and was skipped; continuing so later rules still run.
+        OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_sudo_require_reauthentication | default(true) |
+    bool)
+- block:
+  - name: Require Re-Authentication When Using the sudo Command - Enable timestamp_timeout option with correct value in /etc/sudoers
+    ansible.builtin.lineinfile:
+      path: /etc/sudoers
+      line: Defaults timestamp_timeout={{ var_sudo_timestamp_timeout }}
+      validate: /usr/sbin/visudo -cf %s
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"sudo" in ansible_facts.packages'
+    - 'edit_sudoers_timestamp_timeout_option is defined and not edit_sudoers_timestamp_timeout_option.changed
+
+      '
+    tags:
+    - NIST-800-53-IA-11
+    - PCI-DSSv4-2.2
+    - PCI-DSSv4-2.2.6
+    - low_complexity
+    - low_disruption
+    - medium_severity
+    - no_reboot_needed
+    - restrict_strategy
+    - sudo_require_reauthentication
+  rescue:
+  - name: 'StigForge: continue after error in ''Require Re-Authentication When Using the sudo Command - Enable timestamp_timeout
+      option with correct value in /etc/sudoers'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Require Re-Authentication When Using the sudo Command - Enable timestamp_timeout option with correct
+        value in /etc/sudoers'' raised an error (module or templating) and was skipped; continuing so later rules still run.
+        OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_sudo_require_reauthentication | default(true) |
+    bool)
+- block:
+  - name: Require Re-Authentication When Using the sudo Command - Remove timestamp_timeout wrong values in /etc/sudoers
+    ansible.builtin.lineinfile:
+      path: /etc/sudoers
+      regexp: ^[\s]*Defaults\s.*\btimestamp_timeout[\s]*=[\s]*(?!{{ var_sudo_timestamp_timeout }}\b)[-]?\w+\b.*$
+      state: absent
+      validate: /usr/sbin/visudo -cf %s
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"sudo" in ansible_facts.packages'
+    tags:
+    - NIST-800-53-IA-11
+    - PCI-DSSv4-2.2
+    - PCI-DSSv4-2.2.6
+    - low_complexity
+    - low_disruption
+    - medium_severity
+    - no_reboot_needed
+    - restrict_strategy
+    - sudo_require_reauthentication
+  rescue:
+  - name: 'StigForge: continue after error in ''Require Re-Authentication When Using the sudo Command - Remove timestamp_timeout
+      wrong values in /etc/sudoers'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Require Re-Authentication When Using the sudo Command - Remove timestamp_timeout wrong values in
+        /etc/sudoers'' raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP
+        evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_sudo_require_reauthentication | default(true) |
+    bool)
+- block:
   - name: Ensure Local Login Warning Banner Is Configured Properly - Copy using inline content
     ansible.builtin.copy:
       content: '{{ cis_banner_text }}'
@@ -13116,7 +13266,6 @@
     ansible.builtin.getent:
       database: group
       key: shadow
-    ignore_errors: true
     when: file_groupowner_backup_etc_gshadow_newgroup is undefined
     tags:
     - NIST-800-53-AC-6 (1)
@@ -13127,6 +13276,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the shadow group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15057,7 +15207,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupowner_var_log_auth_newgroup is undefined
     tags:
     - configure_strategy
@@ -15066,6 +15215,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15096,7 +15246,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_auth_newgroup is undefined
     tags:
     - configure_strategy
@@ -15105,6 +15254,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15173,7 +15323,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupowner_var_log_cloud_init_newgroup is undefined
     tags:
     - configure_strategy
@@ -15182,6 +15331,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15215,7 +15365,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_cloud_init_newgroup is undefined
     tags:
     - configure_strategy
@@ -15224,6 +15373,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15304,7 +15454,6 @@
     ansible.builtin.getent:
       database: group
       key: systemd-journal
-    ignore_errors: true
     when: file_groupowner_var_log_journal_newgroup is undefined
     tags:
     - configure_strategy
@@ -15313,6 +15462,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the systemd-journal group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15346,7 +15496,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_journal_newgroup is undefined
     tags:
     - configure_strategy
@@ -15355,6 +15504,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15435,7 +15585,6 @@
     ansible.builtin.getent:
       database: group
       key: utmp
-    ignore_errors: true
     when: file_groupowner_var_log_lastlog_newgroup is undefined
     tags:
     - configure_strategy
@@ -15444,6 +15593,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the utmp group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15477,7 +15627,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_lastlog_newgroup is undefined
     tags:
     - configure_strategy
@@ -15486,6 +15635,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15567,7 +15717,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupowner_var_log_localmessages_newgroup is undefined
     tags:
     - configure_strategy
@@ -15576,6 +15725,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15609,7 +15759,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_localmessages_newgroup is undefined
     tags:
     - configure_strategy
@@ -15618,6 +15767,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15698,7 +15848,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupowner_var_log_messages_newgroup is undefined
     tags:
     - configure_strategy
@@ -15707,6 +15856,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15740,7 +15890,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_messages_newgroup is undefined
     tags:
     - configure_strategy
@@ -15749,6 +15898,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15822,7 +15972,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupowner_var_log_secure_newgroup is undefined
     tags:
     - configure_strategy
@@ -15831,6 +15980,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15863,7 +16013,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_secure_newgroup is undefined
     tags:
     - configure_strategy
@@ -15872,6 +16021,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15953,7 +16103,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupowner_var_log_syslog_newgroup is undefined
     tags:
     - DISA-STIG-UBTU-24-700130
@@ -15963,6 +16112,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -15996,7 +16146,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_syslog_newgroup is undefined
     tags:
     - DISA-STIG-UBTU-24-700130
@@ -16006,6 +16155,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16082,7 +16232,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupowner_var_log_waagent_newgroup is undefined
     tags:
     - configure_strategy
@@ -16091,6 +16240,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16124,7 +16274,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_waagent_newgroup is undefined
     tags:
     - configure_strategy
@@ -16133,6 +16282,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16212,7 +16362,6 @@
     ansible.builtin.getent:
       database: group
       key: utmp
-    ignore_errors: true
     when: file_groupowner_var_log_wbtmp_newgroup is undefined
     tags:
     - configure_strategy
@@ -16221,6 +16370,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the utmp group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16253,7 +16403,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupowner_var_log_wbtmp_newgroup is undefined
     tags:
     - configure_strategy
@@ -16262,6 +16411,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16342,7 +16492,6 @@
     ansible.builtin.getent:
       database: group
       key: adm
-    ignore_errors: true
     when: file_groupownerships_var_log_apt_newgroup is undefined
     tags:
     - configure_strategy
@@ -16351,6 +16500,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the adm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16384,7 +16534,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupownerships_var_log_apt_newgroup is undefined
     tags:
     - configure_strategy
@@ -16393,6 +16542,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16472,7 +16622,6 @@
     ansible.builtin.getent:
       database: group
       key: gdm
-    ignore_errors: true
     when: file_groupownerships_var_log_gdm_newgroup is undefined
     tags:
     - configure_strategy
@@ -16481,6 +16630,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the gdm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16514,7 +16664,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupownerships_var_log_gdm_newgroup is undefined
     tags:
     - configure_strategy
@@ -16523,6 +16672,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16602,7 +16752,6 @@
     ansible.builtin.getent:
       database: group
       key: gdm
-    ignore_errors: true
     when: file_groupownerships_var_log_gdm3_newgroup is undefined
     tags:
     - configure_strategy
@@ -16611,6 +16760,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the gdm group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16644,7 +16794,6 @@
     ansible.builtin.getent:
       database: group
       key: gdm3
-    ignore_errors: true
     when: file_groupownerships_var_log_gdm3_newgroup is undefined
     tags:
     - configure_strategy
@@ -16653,6 +16802,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the gdm3 group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16686,7 +16836,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupownerships_var_log_gdm3_newgroup is undefined
     tags:
     - configure_strategy
@@ -16695,6 +16844,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16775,7 +16925,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupownerships_var_log_landscape_newgroup is undefined
     tags:
     - configure_strategy
@@ -16784,6 +16933,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16817,7 +16967,6 @@
     ansible.builtin.getent:
       database: group
       key: landscape
-    ignore_errors: true
     when: file_groupownerships_var_log_landscape_newgroup is undefined
     tags:
     - configure_strategy
@@ -16826,6 +16975,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the landscape group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16905,7 +17055,6 @@
     ansible.builtin.getent:
       database: group
       key: sssd
-    ignore_errors: true
     when: file_groupownerships_var_log_sssd_newgroup is undefined
     tags:
     - configure_strategy
@@ -16914,6 +17063,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the sssd group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -16947,7 +17097,6 @@
     ansible.builtin.getent:
       database: group
       key: root
-    ignore_errors: true
     when: file_groupownerships_var_log_sssd_newgroup is undefined
     tags:
     - configure_strategy
@@ -16956,6 +17105,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17036,7 +17186,6 @@
     ansible.builtin.getent:
       database: passwd
       key: syslog
-    ignore_errors: true
     tags:
     - configure_strategy
     - file_owner_var_log_auth
@@ -17044,6 +17193,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17074,7 +17224,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_owner_var_log_auth_newown is undefined
     tags:
     - configure_strategy
@@ -17083,6 +17232,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17151,7 +17301,6 @@
     ansible.builtin.getent:
       database: passwd
       key: syslog
-    ignore_errors: true
     tags:
     - configure_strategy
     - file_owner_var_log_cloud_init
@@ -17159,6 +17308,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17191,7 +17341,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_owner_var_log_cloud_init_newown is undefined
     tags:
     - configure_strategy
@@ -17200,6 +17349,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17405,7 +17555,6 @@
     ansible.builtin.getent:
       database: passwd
       key: syslog
-    ignore_errors: true
     tags:
     - configure_strategy
     - file_owner_var_log_localmessages
@@ -17413,6 +17562,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17446,7 +17596,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_owner_var_log_localmessages_newown is undefined
     tags:
     - configure_strategy
@@ -17455,6 +17604,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17535,7 +17685,6 @@
     ansible.builtin.getent:
       database: passwd
       key: syslog
-    ignore_errors: true
     tags:
     - configure_strategy
     - file_owner_var_log_messages
@@ -17543,6 +17692,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17573,7 +17723,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_owner_var_log_messages_newown is undefined
     tags:
     - configure_strategy
@@ -17582,6 +17731,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17650,7 +17800,6 @@
     ansible.builtin.getent:
       database: passwd
       key: syslog
-    ignore_errors: true
     tags:
     - configure_strategy
     - file_owner_var_log_secure
@@ -17658,6 +17807,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17688,7 +17838,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_owner_var_log_secure_newown is undefined
     tags:
     - configure_strategy
@@ -17697,6 +17846,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17772,7 +17922,6 @@
     ansible.builtin.getent:
       database: passwd
       key: syslog
-    ignore_errors: true
     tags:
     - DISA-STIG-UBTU-24-700140
     - configure_strategy
@@ -17781,6 +17930,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17812,7 +17962,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_owner_var_log_syslog_newown is undefined
     tags:
     - DISA-STIG-UBTU-24-700140
@@ -17822,6 +17971,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17893,7 +18043,6 @@
     ansible.builtin.getent:
       database: passwd
       key: syslog
-    ignore_errors: true
     tags:
     - configure_strategy
     - file_owner_var_log_waagent
@@ -17901,6 +18050,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the syslog user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -17931,7 +18081,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_owner_var_log_waagent_newown is undefined
     tags:
     - configure_strategy
@@ -17940,6 +18089,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -18266,7 +18416,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     tags:
     - configure_strategy
     - file_ownerships_var_log_landscape
@@ -18274,6 +18423,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -18307,7 +18457,6 @@
     ansible.builtin.getent:
       database: passwd
       key: landscape
-    ignore_errors: true
     when: file_ownerships_var_log_landscape_newown is undefined
     tags:
     - configure_strategy
@@ -18316,6 +18465,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the landscape user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -18395,7 +18545,6 @@
     ansible.builtin.getent:
       database: passwd
       key: sssd
-    ignore_errors: true
     tags:
     - configure_strategy
     - file_ownerships_var_log_sssd
@@ -18403,6 +18552,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the sssd user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -18433,7 +18583,6 @@
     ansible.builtin.getent:
       database: passwd
       key: root
-    ignore_errors: true
     when: file_ownerships_var_log_sssd_newown is undefined
     tags:
     - configure_strategy
@@ -18442,6 +18591,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the root user is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
@@ -24533,7 +24683,6 @@
     ansible.builtin.getent:
       database: group
       key: crontab
-    ignore_errors: true
     when:
     - '"linux-base" in ansible_facts.packages'
     - file_groupowner_cron_allow_newgroup is undefined
@@ -24548,6 +24697,7 @@
     - low_disruption
     - medium_severity
     - no_reboot_needed
+    failed_when: false
   rescue:
   - name: 'StigForge: continue after error in ''Check that the crontab group is defined'' (OpenSCAP is the score gate)'
     ansible.builtin.debug:
