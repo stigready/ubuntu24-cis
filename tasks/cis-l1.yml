@@ -29777,12 +29777,16 @@
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_passwords_pam_faillock_enabled | default(true)
     | bool)
 - block:
-  - name: StigForge supplement - enable pam_pwhistory on common-password (accounts_password_pam_pwhistory_enabled)
-    ansible.builtin.lineinfile:
-      path: /etc/pam.d/common-password
-      regexp: ^\s*password\s+\S+\s+pam_pwhistory\.so
-      line: password    requisite                       pam_pwhistory.so remember=5 use_authtok enforce_for_root
-      state: present
+  - name: StigForge supplement - pam-auth-update profile for pam_pwhistory (accounts_password_pam_pwhistory_enabled)
+    ansible.builtin.copy:
+      dest: /usr/share/pam-configs/pwhistory
+      owner: root
+      group: root
+      mode: '0644'
+      content: "Name: pwhistory password history checking\nDefault: yes\nPriority: 1024\nPassword-Type: Primary\nPassword:\n\
+        \trequisite pam_pwhistory.so remember={{ var_password_pam_remember | default('24') }} enforce_for_root try_first_pass\
+        \ use_authtok\nPassword-Initial:\n\trequisite pam_pwhistory.so remember={{ var_password_pam_remember | default('24')\
+        \ }} enforce_for_root try_first_pass\n"
     when: '"libpam-runtime" in ansible_facts.packages'
     tags:
     - accounts_password_pam_pwhistory_enabled
@@ -29790,13 +29794,50 @@
     - accounts_password_pam_pwhistory_use_authtok
     - accounts_password_pam_pwhistory_enforce_root
   rescue:
-  - name: 'StigForge: continue after error in ''StigForge supplement - enable pam_pwhistory on common-password (accounts_password_pam_pwhistory_enabled)''
+  - name: 'StigForge: continue after error in ''StigForge supplement - pam-auth-update profile for pam_pwhistory (accounts_password_pam_pwhistory_enabled)''
       (OpenSCAP is the score gate)'
     ansible.builtin.debug:
-      msg: 'StigForge: ''StigForge supplement - enable pam_pwhistory on common-password (accounts_password_pam_pwhistory_enabled)''
+      msg: 'StigForge: ''StigForge supplement - pam-auth-update profile for pam_pwhistory (accounts_password_pam_pwhistory_enabled)''
         raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
         resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_password_pam_pwhistory_enforce_root | default(true)
+    | bool)
+- block:
+  - name: StigForge supplement - remove the end-of-file pwhistory line an earlier supplement appended (accounts_password_pam_pwhistory_enabled)
+    ansible.builtin.lineinfile:
+      path: /etc/pam.d/common-password
+      regexp: ^password\s+requisite\s+pam_pwhistory\.so remember=5 use_authtok enforce_for_root\s*$
+      state: absent
+    when: '"libpam-runtime" in ansible_facts.packages'
+    tags:
+    - accounts_password_pam_pwhistory_enabled
+  rescue:
+  - name: 'StigForge: continue after error in ''StigForge supplement - remove the end-of-file pwhistory line an earlier supplement
+      appended (accounts_password_pam_pwhistory_enabled)'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''StigForge supplement - remove the end-of-file pwhistory line an earlier supplement appended (accounts_password_pam_pwhistory_enabled)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_password_pam_pwhistory_enabled | default(true)
+    | bool)
+- block:
+  - name: StigForge supplement - enable the pwhistory profile with pam-auth-update (accounts_password_pam_pwhistory_enabled)
+    ansible.builtin.command:
+      cmd: pam-auth-update --package --enable pwhistory
+    register: stigforge_pam_auth_update_pwhistory
+    changed_when: stigforge_pam_auth_update_pwhistory.rc == 0
+    when: '"libpam-runtime" in ansible_facts.packages'
+    tags:
+    - accounts_password_pam_pwhistory_enabled
+    - accounts_password_pam_pwhistory_remember
+  rescue:
+  - name: 'StigForge: continue after error in ''StigForge supplement - enable the pwhistory profile with pam-auth-update (accounts_password_pam_pwhistory_enabled)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''StigForge supplement - enable the pwhistory profile with pam-auth-update (accounts_password_pam_pwhistory_enabled)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_password_pam_pwhistory_remember | default(true)
     | bool)
 - block:
   - name: Ensure the group used by pam_wheel for su exists
@@ -30016,3 +30057,28 @@
         (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
         state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_grub2_enable_apparmor | default(true) | bool)
+- block:
+  - name: Define a read-only TMOUT for login shells (accounts_tmout)
+    ansible.builtin.copy:
+      dest: /etc/profile.d/tmout.sh
+      owner: root
+      group: root
+      mode: '0644'
+      content: '# StigReady: terminate an idle login shell (accounts_tmout)
+
+        TMOUT={{ var_accounts_tmout | default(''900'') }}
+
+        readonly TMOUT
+
+        export TMOUT
+
+        '
+    tags:
+    - accounts_tmout
+  rescue:
+  - name: 'StigForge: continue after error in ''Define a read-only TMOUT for login shells (accounts_tmout)'' (OpenSCAP is
+      the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Define a read-only TMOUT for login shells (accounts_tmout)'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_tmout | default(true) | bool)
