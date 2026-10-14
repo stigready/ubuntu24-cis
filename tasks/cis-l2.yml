@@ -50369,25 +50369,51 @@
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_all_apparmor_profiles_in_enforce_complain_mode |
     default(true) | bool)
 - block:
-  - name: Ensure /etc/nftables.conf exists with the stock accept-all ruleset (nftables_rules_permanent)
+  - name: Write /etc/nftables.rules with the stock accept-all table (nftables_rules_permanent)
+    ansible.builtin.copy:
+      dest: /etc/nftables.rules
+      owner: root
+      group: root
+      mode: '0640'
+      force: false
+      content: "table inet filter {\n\tchain input {\n\t\ttype filter hook input priority filter;\n\t}\n\tchain forward {\n\
+        \t\ttype filter hook forward priority filter;\n\t}\n\tchain output {\n\t\ttype filter hook output priority filter;\n\
+        \t}\n}\n"
+    tags:
+    - nftables_rules_permanent
+  rescue:
+  - name: 'StigForge: continue after error in ''Write /etc/nftables.rules with the stock accept-all table (nftables_rules_permanent)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Write /etc/nftables.rules with the stock accept-all table (nftables_rules_permanent)'' raised an
+        error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
+        system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_rules_permanent | default(true) | bool)
+- block:
+  - name: Write /etc/nftables.conf to include /etc/nftables.rules (nftables_rules_permanent)
     ansible.builtin.copy:
       dest: /etc/nftables.conf
       owner: root
       group: root
       mode: '0755'
-      force: false
-      content: "#!/usr/sbin/nft -f\n\nflush ruleset\n\ntable inet filter {\n\tchain input {\n\t\ttype filter hook input priority\
-        \ filter;\n\t}\n\tchain forward {\n\t\ttype filter hook forward priority filter;\n\t}\n\tchain output {\n\t\ttype\
-        \ filter hook output priority filter;\n\t}\n}\n"
+      content: '#!/usr/sbin/nft -f
+
+
+        flush ruleset
+
+
+        include "/etc/nftables.rules"
+
+        '
     tags:
     - nftables_rules_permanent
   rescue:
-  - name: 'StigForge: continue after error in ''Ensure /etc/nftables.conf exists with the stock accept-all ruleset (nftables_rules_permanent)''
+  - name: 'StigForge: continue after error in ''Write /etc/nftables.conf to include /etc/nftables.rules (nftables_rules_permanent)''
       (OpenSCAP is the score gate)'
     ansible.builtin.debug:
-      msg: 'StigForge: ''Ensure /etc/nftables.conf exists with the stock accept-all ruleset (nftables_rules_permanent)'' raised
-        an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
-        system state independently.'
+      msg: 'StigForge: ''Write /etc/nftables.conf to include /etc/nftables.rules (nftables_rules_permanent)'' raised an error
+        (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
+        state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_rules_permanent | default(true) | bool)
 - block:
   - name: Configure auditd.conf actions and retention (auditd_data_*)
@@ -50523,3 +50549,118 @@
         system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_passwords_pam_faillock_root_unlock_time
     | default(true) | bool)
+- block:
+  - name: Make /var/log/audit private to root (directory_permissions_var_log_audit)
+    ansible.builtin.file:
+      path: /var/log/audit
+      state: directory
+      owner: root
+      group: root
+      mode: '0700'
+    tags:
+    - directory_permissions_var_log_audit
+    - file_group_ownership_var_log_audit
+  rescue:
+  - name: 'StigForge: continue after error in ''Make /var/log/audit private to root (directory_permissions_var_log_audit)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Make /var/log/audit private to root (directory_permissions_var_log_audit)'' raised an error (module
+        or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
+        independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_directory_permissions_var_log_audit | default(true)
+    | bool)
+- block:
+  - name: Find the audit log files
+    ansible.builtin.find:
+      paths: /var/log/audit
+      patterns: audit.log*
+      file_type: file
+    register: stigforge_audit_logs
+    tags:
+    - file_permissions_var_log_audit
+    - file_group_ownership_var_log_audit
+  rescue:
+  - name: 'StigForge: continue after error in ''Find the audit log files'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Find the audit log files'' raised an error (module or templating) and was skipped; continuing so
+        later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_file_group_ownership_var_log_audit | default(true)
+    | bool)
+- block:
+  - name: Make the audit log files root:root 0600 (file_permissions_var_log_audit)
+    ansible.builtin.file:
+      path: '{{ item.path }}'
+      owner: root
+      group: root
+      mode: '0600'
+    loop: '{{ stigforge_audit_logs.files | default([]) }}'
+    loop_control:
+      label: '{{ item.path }}'
+    tags:
+    - file_permissions_var_log_audit
+    - file_group_ownership_var_log_audit
+  rescue:
+  - name: 'StigForge: continue after error in ''Make the audit log files root:root 0600 (file_permissions_var_log_audit)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Make the audit log files root:root 0600 (file_permissions_var_log_audit)'' raised an error (module
+        or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
+        independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_file_group_ownership_var_log_audit | default(true)
+    | bool)
+- block:
+  - name: Make /etc/audit/rules.d root-owned 0750 (file_permissions_etc_audit_rulesd)
+    ansible.builtin.file:
+      path: /etc/audit/rules.d
+      state: directory
+      owner: root
+      group: root
+      mode: '0750'
+    tags:
+    - file_permissions_etc_audit_rulesd
+  rescue:
+  - name: 'StigForge: continue after error in ''Make /etc/audit/rules.d root-owned 0750 (file_permissions_etc_audit_rulesd)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Make /etc/audit/rules.d root-owned 0750 (file_permissions_etc_audit_rulesd)'' raised an error (module
+        or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
+        independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_file_permissions_etc_audit_rulesd | default(true)
+    | bool)
+- block:
+  - name: Find the audit rules files
+    ansible.builtin.find:
+      paths: /etc/audit/rules.d
+      patterns: '*.rules'
+      file_type: file
+    register: stigforge_audit_rules_files
+    tags:
+    - file_permissions_etc_audit_rulesd
+  rescue:
+  - name: 'StigForge: continue after error in ''Find the audit rules files'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Find the audit rules files'' raised an error (module or templating) and was skipped; continuing so
+        later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_file_permissions_etc_audit_rulesd | default(true)
+    | bool)
+- block:
+  - name: Make the audit rules files root:root 0640 (file_permissions_etc_audit_rulesd)
+    ansible.builtin.file:
+      path: '{{ item.path }}'
+      owner: root
+      group: root
+      mode: '0640'
+    loop: '{{ stigforge_audit_rules_files.files | default([]) }}'
+    loop_control:
+      label: '{{ item.path }}'
+    tags:
+    - file_permissions_etc_audit_rulesd
+  rescue:
+  - name: 'StigForge: continue after error in ''Make the audit rules files root:root 0640 (file_permissions_etc_audit_rulesd)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Make the audit rules files root:root 0640 (file_permissions_etc_audit_rulesd)'' raised an error (module
+        or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
+        independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_file_permissions_etc_audit_rulesd | default(true)
+    | bool)

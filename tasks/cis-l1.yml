@@ -30268,23 +30268,49 @@
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_all_apparmor_profiles_in_enforce_complain_mode |
     default(true) | bool)
 - block:
-  - name: Ensure /etc/nftables.conf exists with the stock accept-all ruleset (nftables_rules_permanent)
+  - name: Write /etc/nftables.rules with the stock accept-all table (nftables_rules_permanent)
+    ansible.builtin.copy:
+      dest: /etc/nftables.rules
+      owner: root
+      group: root
+      mode: '0640'
+      force: false
+      content: "table inet filter {\n\tchain input {\n\t\ttype filter hook input priority filter;\n\t}\n\tchain forward {\n\
+        \t\ttype filter hook forward priority filter;\n\t}\n\tchain output {\n\t\ttype filter hook output priority filter;\n\
+        \t}\n}\n"
+    tags:
+    - nftables_rules_permanent
+  rescue:
+  - name: 'StigForge: continue after error in ''Write /etc/nftables.rules with the stock accept-all table (nftables_rules_permanent)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Write /etc/nftables.rules with the stock accept-all table (nftables_rules_permanent)'' raised an
+        error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
+        system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_rules_permanent | default(true) | bool)
+- block:
+  - name: Write /etc/nftables.conf to include /etc/nftables.rules (nftables_rules_permanent)
     ansible.builtin.copy:
       dest: /etc/nftables.conf
       owner: root
       group: root
       mode: '0755'
-      force: false
-      content: "#!/usr/sbin/nft -f\n\nflush ruleset\n\ntable inet filter {\n\tchain input {\n\t\ttype filter hook input priority\
-        \ filter;\n\t}\n\tchain forward {\n\t\ttype filter hook forward priority filter;\n\t}\n\tchain output {\n\t\ttype\
-        \ filter hook output priority filter;\n\t}\n}\n"
+      content: '#!/usr/sbin/nft -f
+
+
+        flush ruleset
+
+
+        include "/etc/nftables.rules"
+
+        '
     tags:
     - nftables_rules_permanent
   rescue:
-  - name: 'StigForge: continue after error in ''Ensure /etc/nftables.conf exists with the stock accept-all ruleset (nftables_rules_permanent)''
+  - name: 'StigForge: continue after error in ''Write /etc/nftables.conf to include /etc/nftables.rules (nftables_rules_permanent)''
       (OpenSCAP is the score gate)'
     ansible.builtin.debug:
-      msg: 'StigForge: ''Ensure /etc/nftables.conf exists with the stock accept-all ruleset (nftables_rules_permanent)'' raised
-        an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
-        system state independently.'
+      msg: 'StigForge: ''Write /etc/nftables.conf to include /etc/nftables.rules (nftables_rules_permanent)'' raised an error
+        (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
+        state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_rules_permanent | default(true) | bool)
