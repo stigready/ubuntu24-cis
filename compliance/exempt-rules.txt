@@ -14,6 +14,7 @@ grub2_uefi_password
 grub2_unique_name
 install_smartcard_packages
 installed_OS_is_vendor_supported
+kernel_module_overlayfs_disabled
 package_opensc_installed
 package_pcsc-lite_installed
 package_subscription-manager_installed

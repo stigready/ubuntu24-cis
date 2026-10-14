@@ -255,7 +255,6 @@ ubuntu24cis_kernel_module_freevxfs_disabled: true
 ubuntu24cis_kernel_module_hfs_disabled: true
 ubuntu24cis_kernel_module_hfsplus_disabled: true
 ubuntu24cis_kernel_module_jffs2_disabled: true
-ubuntu24cis_kernel_module_overlayfs_disabled: true
 ubuntu24cis_kernel_module_rds_disabled: true
 ubuntu24cis_kernel_module_sctp_disabled: true
 ubuntu24cis_kernel_module_tipc_disabled: true
