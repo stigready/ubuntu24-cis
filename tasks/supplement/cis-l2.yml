@@ -440,7 +440,7 @@
     paths: /etc/apparmor.d
     file_type: file
     recurse: false
-    contains: 'flags=\([^)]*\bunconfined\b[^)]*\)'
+    contains: '.*flags=\([^)]*\bunconfined\b[^)]*\)'   # ansible find matches each line with re.match, so anchor-free text needs the .* prefix
   register: stigforge_apparmor_unconfined
   tags:
     - all_apparmor_profiles_in_enforce_complain_mode
@@ -464,3 +464,116 @@
   when: stigforge_apparmor_complain is changed
   tags:
     - all_apparmor_profiles_in_enforce_complain_mode
+
+# nftables_rules_permanent: the package already installed in the build but /etc/nftables.conf was absent at scan time
+# (ubuntu-24.04:cis-l1 and cis-l2, 2026-10-13); a stock Ubuntu 24.04 ships it. Write the stock accept-all file when it is
+# missing (force: false keeps an existing one), so the result does not depend on what else touched the package.
+- name: Ensure /etc/nftables.conf exists with the stock accept-all ruleset (nftables_rules_permanent)
+  ansible.builtin.copy:
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0755"
+    force: false
+    content: |
+      #!/usr/sbin/nft -f
+
+      flush ruleset
+
+      table inet filter {
+      	chain input {
+      		type filter hook input priority filter;
+      	}
+      	chain forward {
+      		type filter hook forward priority filter;
+      	}
+      	chain output {
+      		type filter hook output priority filter;
+      	}
+      }
+  tags:
+    - nftables_rules_permanent
+
+# ---- 2026-10-13 ubuntu-24.04:cis-l2 prove-out (OpenSCAP 96.3%, 12 non-exempt failures, 12 regressions). Values are the
+# profile's own (ARF set-value): disk_full halt, disk_error syslog, space_left email, admin_space_left halt, keep_logs.
+
+# auditd_data_* (CIS 6.3.2.x). A halted instance can be restarted and inspected from the EC2 console; single-user mode on a
+# cloud instance with no console would be unreachable, so halt is used where the profile offers halt|single.
+- name: Configure auditd.conf actions and retention (auditd_data_*)
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^\s*#?\s*{{ item.key }}\s*='
+    line: '{{ item.key }} = {{ item.value }}'
+  loop:
+    - {key: disk_full_action, value: halt}
+    - {key: disk_error_action, value: syslog}
+    - {key: space_left_action, value: email}
+    - {key: admin_space_left_action, value: halt}
+    - {key: max_log_file_action, value: keep_logs}
+    - {key: action_mail_acct, value: root}
+  loop_control:
+    label: '{{ item.key }}'
+  tags:
+    - auditd_data_disk_full_action
+    - auditd_data_disk_error_action
+    - auditd_data_retention_space_left_action
+    - auditd_data_retention_admin_space_left_action
+    - auditd_data_retention_max_log_file_action
+
+# file_group_ownership_var_log_audit: the OVAL XORs "audit log files are group root" with "auditd.conf log_group is not
+# root"; Ubuntu's default log_group = adm makes both true and the rule false.
+- name: Set auditd log_group to root (file_group_ownership_var_log_audit)
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^\s*#?\s*log_group\s*='
+    line: 'log_group = root'
+  tags:
+    - file_group_ownership_var_log_audit
+
+# audit_rules_session_events / audit_rules_networkconfig_modification (CIS 6.3.3.x). The 32-bit syscall rule is written only
+# where the kernel has a 32-bit personality (x86_64); an unsupported arch=b32 rule makes augenrules fail the whole load.
+- name: Audit rules for session events and network environment changes
+  ansible.builtin.copy:
+    dest: /etc/audit/rules.d/50-stigready-session-network.rules
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      -w /var/run/utmp -p wa -k session
+      -w /var/log/wtmp -p wa -k session
+      -w /var/log/btmp -p wa -k session
+      -a always,exit -F arch=b64 -S sethostname,setdomainname -k system-locale
+      {% if ansible_facts['architecture'] == 'x86_64' %}
+      -a always,exit -F arch=b32 -S sethostname,setdomainname -k system-locale
+      {% endif %}
+      -w /etc/issue -p wa -k system-locale
+      -w /etc/issue.net -p wa -k system-locale
+      -w /etc/hosts -p wa -k system-locale
+      -w /etc/networks -p wa -k system-locale
+      -w /etc/network/ -p wa -k system-locale
+      -w /etc/netplan/ -p wa -k system-locale
+  register: stigforge_audit_rules_session_network
+  tags:
+    - audit_rules_session_events
+    - audit_rules_networkconfig_modification
+
+- name: Load the audit rules (audit_rules_session_events)
+  ansible.builtin.command: augenrules --load
+  when: stigforge_audit_rules_session_network is changed
+  changed_when: true
+  tags:
+    - audit_rules_session_events
+    - audit_rules_networkconfig_modification
+
+# accounts_passwords_pam_faillock_root_unlock_time: the profile value is 60 seconds.
+- name: Set the faillock root unlock time (accounts_passwords_pam_faillock_root_unlock_time)
+  ansible.builtin.lineinfile:
+    path: /etc/security/faillock.conf
+    regexp: '^\s*#?\s*root_unlock_time\s*='
+    line: 'root_unlock_time = {{ var_accounts_passwords_pam_faillock_root_unlock_time | default("60") }}'
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+  tags:
+    - accounts_passwords_pam_faillock_root_unlock_time

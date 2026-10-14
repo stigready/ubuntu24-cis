@@ -421,7 +421,7 @@
     paths: /etc/apparmor.d
     file_type: file
     recurse: false
-    contains: 'flags=\([^)]*\bunconfined\b[^)]*\)'
+    contains: '.*flags=\([^)]*\bunconfined\b[^)]*\)'   # ansible find matches each line with re.match, so anchor-free text needs the .* prefix
   register: stigforge_apparmor_unconfined
   tags:
     - all_apparmor_profiles_in_enforce_complain_mode
@@ -445,3 +445,32 @@
   when: stigforge_apparmor_complain is changed
   tags:
     - all_apparmor_profiles_in_enforce_complain_mode
+
+# nftables_rules_permanent: the package already installed in the build but /etc/nftables.conf was absent at scan time
+# (ubuntu-24.04:cis-l1 and cis-l2, 2026-10-13); a stock Ubuntu 24.04 ships it. Write the stock accept-all file when it is
+# missing (force: false keeps an existing one), so the result does not depend on what else touched the package.
+- name: Ensure /etc/nftables.conf exists with the stock accept-all ruleset (nftables_rules_permanent)
+  ansible.builtin.copy:
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0755"
+    force: false
+    content: |
+      #!/usr/sbin/nft -f
+
+      flush ruleset
+
+      table inet filter {
+      	chain input {
+      		type filter hook input priority filter;
+      	}
+      	chain forward {
+      		type filter hook forward priority filter;
+      	}
+      	chain output {
+      		type filter hook output priority filter;
+      	}
+      }
+  tags:
+    - nftables_rules_permanent
