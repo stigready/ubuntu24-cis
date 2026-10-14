@@ -50456,8 +50456,10 @@
       path: /etc/audit/auditd.conf
       regexp: ^\s*#?\s*log_group\s*=
       line: log_group = root
+    register: stigforge_audit_log_group
     tags:
     - file_group_ownership_var_log_audit
+    - file_permissions_var_log_audit
   rescue:
   - name: 'StigForge: continue after error in ''Set auditd log_group to root (file_group_ownership_var_log_audit)'' (OpenSCAP
       is the score gate)'
@@ -50472,7 +50474,7 @@
       dest: /etc/audit/rules.d/50-stigready-session-network.rules
       owner: root
       group: root
-      mode: '0640'
+      mode: '0600'
       content: '-w /var/run/utmp -p wa -k session
 
         -w /var/log/wtmp -p wa -k session
@@ -50549,6 +50551,24 @@
         system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_passwords_pam_faillock_root_unlock_time
     | default(true) | bool)
+- block:
+  - name: Restart auditd so it creates logs with the new log_group (file_group_ownership_var_log_audit)
+    ansible.builtin.service:
+      name: auditd
+      state: restarted
+    when: stigforge_audit_log_group is changed
+    tags:
+    - file_group_ownership_var_log_audit
+    - file_permissions_var_log_audit
+  rescue:
+  - name: 'StigForge: continue after error in ''Restart auditd so it creates logs with the new log_group (file_group_ownership_var_log_audit)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Restart auditd so it creates logs with the new log_group (file_group_ownership_var_log_audit)'' raised
+        an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
+        system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_file_group_ownership_var_log_audit | default(true)
+    | bool)
 - block:
   - name: Make /var/log/audit private to root (directory_permissions_var_log_audit)
     ansible.builtin.file:
@@ -50644,22 +50664,22 @@
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_file_permissions_etc_audit_rulesd | default(true)
     | bool)
 - block:
-  - name: Make the audit rules files root:root 0640 (file_permissions_etc_audit_rulesd)
+  - name: Make the audit rules files root:root 0600 (file_permissions_etc_audit_rulesd)
     ansible.builtin.file:
       path: '{{ item.path }}'
       owner: root
       group: root
-      mode: '0640'
+      mode: '0600'
     loop: '{{ stigforge_audit_rules_files.files | default([]) }}'
     loop_control:
       label: '{{ item.path }}'
     tags:
     - file_permissions_etc_audit_rulesd
   rescue:
-  - name: 'StigForge: continue after error in ''Make the audit rules files root:root 0640 (file_permissions_etc_audit_rulesd)''
+  - name: 'StigForge: continue after error in ''Make the audit rules files root:root 0600 (file_permissions_etc_audit_rulesd)''
       (OpenSCAP is the score gate)'
     ansible.builtin.debug:
-      msg: 'StigForge: ''Make the audit rules files root:root 0640 (file_permissions_etc_audit_rulesd)'' raised an error (module
+      msg: 'StigForge: ''Make the audit rules files root:root 0600 (file_permissions_etc_audit_rulesd)'' raised an error (module
         or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state
         independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_file_permissions_etc_audit_rulesd | default(true)

@@ -539,8 +539,10 @@
     path: /etc/audit/auditd.conf
     regexp: '^\s*#?\s*log_group\s*='
     line: 'log_group = root'
+  register: stigforge_audit_log_group
   tags:
     - file_group_ownership_var_log_audit
+    - file_permissions_var_log_audit
 
 # audit_rules_session_events / audit_rules_networkconfig_modification (CIS 6.3.3.x). The 32-bit syscall rule is written only
 # where the kernel has a 32-bit personality (x86_64); an unsupported arch=b32 rule makes augenrules fail the whole load.
@@ -549,7 +551,7 @@
     dest: /etc/audit/rules.d/50-stigready-session-network.rules
     owner: root
     group: root
-    mode: "0640"
+    mode: "0600"
     content: |
       -w /var/run/utmp -p wa -k session
       -w /var/log/wtmp -p wa -k session
@@ -593,7 +595,22 @@
 # directory_permissions_var_log_audit / file_permissions_var_log_audit / file_group_ownership_var_log_audit /
 # file_permissions_etc_audit_rulesd. With log_group = root the OVAL expects /var/log/audit 0700 and its logs 0600, all root:root;
 # changing auditd.conf does not re-own what auditd already created as root:adm 0750/0640 (ubuntu-24.04:cis-l2 2026-10-14:
-# the four rules regressed after log_group was set). /etc/audit/rules.d files must be 0640 or stricter.
+# the four rules regressed after log_group was set). /etc/audit/rules.d files must be 0600 or stricter (the OVAL object excludes
+# only files in state mode_0600or_stricter, so a 0640 rules file fails the rule).
+#
+# auditd reads log_group only when it starts. The daemon is already running with Ubuntu's default (adm) when this file is edited,
+# so the first rotation (max_log_file = 8 MB, reached during the build) created a new audit.log as root:adm 0640 AFTER the
+# permission tasks below had run (ubuntu-24.04:cis-l2 2026-10-14: audit.log gid 4, 0640 in the final scan). Restart auditd first
+# so every file it creates from now on is root:root 0600, then normalise what already exists.
+- name: Restart auditd so it creates logs with the new log_group (file_group_ownership_var_log_audit)
+  ansible.builtin.service:
+    name: auditd
+    state: restarted
+  when: stigforge_audit_log_group is changed
+  tags:
+    - file_group_ownership_var_log_audit
+    - file_permissions_var_log_audit
+
 - name: Make /var/log/audit private to root (directory_permissions_var_log_audit)
   ansible.builtin.file:
     path: /var/log/audit
@@ -647,12 +664,12 @@
   tags:
     - file_permissions_etc_audit_rulesd
 
-- name: Make the audit rules files root:root 0640 (file_permissions_etc_audit_rulesd)
+- name: Make the audit rules files root:root 0600 (file_permissions_etc_audit_rulesd)
   ansible.builtin.file:
     path: '{{ item.path }}'
     owner: root
     group: root
-    mode: "0640"
+    mode: "0600"
   loop: '{{ stigforge_audit_rules_files.files | default([]) }}'
   loop_control:
     label: '{{ item.path }}'

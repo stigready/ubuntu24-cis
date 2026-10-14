@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.3.17",
+    "version": "0.3.18",
     "role": "ubuntu24_cis",
     "matrix_status": "green"
   }
