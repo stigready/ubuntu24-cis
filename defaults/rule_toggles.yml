@@ -38,6 +38,7 @@ ubuntu24cis_accounts_user_interactive_home_directory_exists: true
 ubuntu24cis_aide_build_database: true
 ubuntu24cis_aide_check_audit_tools: true
 ubuntu24cis_aide_periodic_checking_systemd_timer: true
+ubuntu24cis_all_apparmor_profiles_in_enforce_complain_mode: true
 ubuntu24cis_audit_rules_dac_modification_chmod: true
 ubuntu24cis_audit_rules_dac_modification_chown: true
 ubuntu24cis_audit_rules_dac_modification_fchmod: true
@@ -239,6 +240,8 @@ ubuntu24cis_file_permissions_var_log_sssd: true
 ubuntu24cis_file_permissions_var_log_syslog: true
 ubuntu24cis_file_permissions_var_log_waagent: true
 ubuntu24cis_file_permissions_var_log_wbtmp: true
+ubuntu24cis_grub2_audit_argument: true
+ubuntu24cis_grub2_audit_backlog_limit_argument: true
 ubuntu24cis_grub2_enable_apparmor: true
 ubuntu24cis_journald_compress: true
 ubuntu24cis_journald_disable_forward_to_syslog: true
@@ -280,6 +283,7 @@ ubuntu24cis_no_empty_passwords_unix: true
 ubuntu24cis_package_aide_installed: true
 ubuntu24cis_package_apparmor_installed: true
 ubuntu24cis_package_audit_installed: true
+ubuntu24cis_package_auditd_installed: true
 ubuntu24cis_package_autofs_removed: true
 ubuntu24cis_package_avahi_removed: true
 ubuntu24cis_package_bind_removed: true
@@ -318,6 +322,7 @@ ubuntu24cis_package_xinetd_removed: true
 ubuntu24cis_package_ypserv_removed: true
 ubuntu24cis_permissions_local_var_log: true
 ubuntu24cis_postfix_network_listening_disabled: true
+ubuntu24cis_root_path_all_dirs: true
 ubuntu24cis_rsyslog_filecreatemode: true
 ubuntu24cis_rsyslog_nolisten: true
 ubuntu24cis_service_apport_disabled: true

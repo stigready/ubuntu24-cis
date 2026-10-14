@@ -351,3 +351,97 @@
     state: present
   tags:
     - nftables_rules_permanent
+
+# auditd running and audit=1 on the kernel command line (stigready-hardened-controls, stigready-boot-cmdline-audit).
+# CIS Ubuntu puts auditing at Level 2, so the cis-l1 role installs no auditd at all, yet the product requires every hardened
+# image to boot with auditing on: the EC2 boot gate failed ubuntu-24.04:cis-l1 on both ("Service auditd is expected to be
+# running", /proc/cmdline lacks audit=1; the build VM serial log shows audit_enabled=0). audit_backlog_limit is the CIS value.
+- name: Install auditd (hardened images boot with auditing on)
+  ansible.builtin.apt:
+    name: auditd
+    state: present
+  tags:
+    - package_auditd_installed
+
+- name: Enable and start auditd
+  ansible.builtin.service:
+    name: auditd
+    enabled: true
+    state: started
+  tags:
+    - service_auditd_enabled
+
+- name: Enable auditing from boot on the kernel command line - audit=1 (grub2_audit_argument)
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX=")(?!(?:[^"]*\s)?audit=1(?:\s|"))([^"]*)"$'
+    line: '\1\2 audit=1"'
+    backrefs: true
+  register: stigforge_grub_audit1
+  tags:
+    - grub2_audit_argument
+
+- name: Set the audit backlog limit on the kernel command line - audit_backlog_limit=8192 (grub2_audit_backlog_limit_argument)
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX=")(?!(?:[^"]*\s)?audit_backlog_limit=\d+(?:\s|"))([^"]*)"$'
+    line: '\1\2 audit_backlog_limit=8192"'
+    backrefs: true
+  register: stigforge_grub_audit_backlog
+  tags:
+    - grub2_audit_backlog_limit_argument
+
+- name: Regenerate the GRUB configuration after the audit change (grub2_audit_argument)
+  ansible.builtin.command: update-grub
+  when: stigforge_grub_audit1 is changed or stigforge_grub_audit_backlog is changed
+  changed_when: true
+  tags:
+    - grub2_audit_argument
+
+# root_path_all_dirs (CIS 5.4.2.5). Ubuntu's default PATH ends in /snap/bin; the minimal image has no snapd, so the
+# directory does not exist and any user who could create it would hijack root's PATH (diagnostic on ubuntu-24.04:cis-l1
+# 2026-10-13: "missing PATH dirs: ['/snap/bin']"). A root-owned empty directory removes the hijack without editing the
+# several places Ubuntu defines that PATH (environment, login.defs, sudoers secure_path), which package updates restore.
+- name: Create the root-owned /snap/bin that Ubuntu's default PATH names (root_path_all_dirs)
+  ansible.builtin.file:
+    path: /snap/bin
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  tags:
+    - root_path_all_dirs
+
+# all_apparmor_profiles_in_enforce_complain_mode (CIS 1.3.1.3/1.3.1.4). The diagnostic showed 116 loaded profiles, 25 in
+# enforce or complain and 91 in unconfined mode. Those 91 are Ubuntu 24.04's flags=(unconfined) user-namespace profiles for
+# applications that are not installed. Enforcing them would confine (and break) an application a customer installs later;
+# complain mode is the same effective behaviour (log, do not deny) and satisfies the rule. Profiles already enforcing stay so.
+- name: Find AppArmor profile files that are flagged unconfined
+  ansible.builtin.find:
+    paths: /etc/apparmor.d
+    file_type: file
+    recurse: false
+    contains: 'flags=\([^)]*\bunconfined\b[^)]*\)'
+  register: stigforge_apparmor_unconfined
+  tags:
+    - all_apparmor_profiles_in_enforce_complain_mode
+
+- name: Put unconfined AppArmor profiles in complain mode (all_apparmor_profiles_in_enforce_complain_mode)
+  ansible.builtin.replace:
+    path: '{{ item.path }}'
+    regexp: '(flags=\([^)]*?)\bunconfined\b'
+    replace: '\1complain'
+  loop: '{{ stigforge_apparmor_unconfined.files | default([]) }}'
+  loop_control:
+    label: '{{ item.path }}'
+  register: stigforge_apparmor_complain
+  tags:
+    - all_apparmor_profiles_in_enforce_complain_mode
+
+- name: Reload AppArmor so the complain flags take effect (all_apparmor_profiles_in_enforce_complain_mode)
+  ansible.builtin.service:
+    name: apparmor
+    state: reloaded
+  when: stigforge_apparmor_complain is changed
+  tags:
+    - all_apparmor_profiles_in_enforce_complain_mode

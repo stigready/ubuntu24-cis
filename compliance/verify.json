@@ -1,30 +1,30 @@
 {
   "role_name": "ubuntu24_cis",
-  "release": "0.3.13",
+  "release": "0.3.14",
   "min_score": 90.0,
   "family": "debian",
   "docker_image_tag": "stigready-prove-ubuntu24_cis",
-  "factory_commit": "b61d04a67489d7e305ed8a0b0b183128ee041e3e",
+  "factory_commit": "446f7d0b2d50b200921700ca9191e254191e3069",
   "profiles": {
     "cis-l1": {
       "xccdf_profile_id": "xccdf_org.ssgproject.content_profile_cis_level1_server",
       "ssg_datastream": "ssg-ubuntu2404-ds.xml",
-      "evidence_dir": "compliance/releases/0.3.13/cis-l1"
+      "evidence_dir": "compliance/releases/0.3.14/cis-l1"
     },
     "cis-l2": {
       "xccdf_profile_id": "xccdf_org.ssgproject.content_profile_cis_level2_server",
       "ssg_datastream": "ssg-ubuntu2404-ds.xml",
-      "evidence_dir": "compliance/releases/0.3.13/cis-l2"
+      "evidence_dir": "compliance/releases/0.3.14/cis-l2"
     },
     "cis-ws-l1": {
       "xccdf_profile_id": "xccdf_org.ssgproject.content_profile_cis_level1_workstation",
       "ssg_datastream": "ssg-ubuntu2404-ds.xml",
-      "evidence_dir": "compliance/releases/0.3.13/cis-ws-l1"
+      "evidence_dir": "compliance/releases/0.3.14/cis-ws-l1"
     },
     "cis-ws-l2": {
       "xccdf_profile_id": "xccdf_org.ssgproject.content_profile_cis_level2_workstation",
       "ssg_datastream": "ssg-ubuntu2404-ds.xml",
-      "evidence_dir": "compliance/releases/0.3.13/cis-ws-l2"
+      "evidence_dir": "compliance/releases/0.3.14/cis-ws-l2"
     }
   },
   "exempt_rules_file": "compliance/exempt-rules.txt"

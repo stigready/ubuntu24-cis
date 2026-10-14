@@ -50206,3 +50206,165 @@
   - always
   - stigforge
   - facts
+- block:
+  - name: Install auditd (hardened images boot with auditing on)
+    ansible.builtin.apt:
+      name: auditd
+      state: present
+    tags:
+    - package_auditd_installed
+  rescue:
+  - name: 'StigForge: continue after error in ''Install auditd (hardened images boot with auditing on)'' (OpenSCAP is the
+      score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Install auditd (hardened images boot with auditing on)'' raised an error (module or templating) and
+        was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_auditd_installed | default(true) | bool)
+- name: 'StigForge: refresh package facts after ''Install auditd (hardened images boot with auditing on)'' installed a package
+    (stigforge#83)'
+  ansible.builtin.package_facts:
+    manager: auto
+  tags:
+  - always
+  - stigforge
+  - facts
+- block:
+  - name: Enable and start auditd
+    ansible.builtin.service:
+      name: auditd
+      enabled: true
+      state: started
+    tags:
+    - service_auditd_enabled
+  rescue:
+  - name: 'StigForge: continue after error in ''Enable and start auditd'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Enable and start auditd'' raised an error (module or templating) and was skipped; continuing so later
+        rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_service_auditd_enabled | default(true) | bool)
+- block:
+  - name: Enable auditing from boot on the kernel command line - audit=1 (grub2_audit_argument)
+    ansible.builtin.lineinfile:
+      path: /etc/default/grub
+      regexp: ^(GRUB_CMDLINE_LINUX=")(?!(?:[^"]*\s)?audit=1(?:\s|"))([^"]*)"$
+      line: \1\2 audit=1"
+      backrefs: true
+    register: stigforge_grub_audit1
+    tags:
+    - grub2_audit_argument
+  rescue:
+  - name: 'StigForge: continue after error in ''Enable auditing from boot on the kernel command line - audit=1 (grub2_audit_argument)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Enable auditing from boot on the kernel command line - audit=1 (grub2_audit_argument)'' raised an
+        error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
+        system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_grub2_audit_argument | default(true) | bool)
+- block:
+  - name: Set the audit backlog limit on the kernel command line - audit_backlog_limit=8192 (grub2_audit_backlog_limit_argument)
+    ansible.builtin.lineinfile:
+      path: /etc/default/grub
+      regexp: ^(GRUB_CMDLINE_LINUX=")(?!(?:[^"]*\s)?audit_backlog_limit=\d+(?:\s|"))([^"]*)"$
+      line: \1\2 audit_backlog_limit=8192"
+      backrefs: true
+    register: stigforge_grub_audit_backlog
+    tags:
+    - grub2_audit_backlog_limit_argument
+  rescue:
+  - name: 'StigForge: continue after error in ''Set the audit backlog limit on the kernel command line - audit_backlog_limit=8192
+      (grub2_audit_backlog_limit_argument)'' (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Set the audit backlog limit on the kernel command line - audit_backlog_limit=8192 (grub2_audit_backlog_limit_argument)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_grub2_audit_backlog_limit_argument | default(true)
+    | bool)
+- block:
+  - name: Regenerate the GRUB configuration after the audit change (grub2_audit_argument)
+    ansible.builtin.command: update-grub
+    when: stigforge_grub_audit1 is changed or stigforge_grub_audit_backlog is changed
+    changed_when: true
+    tags:
+    - grub2_audit_argument
+  rescue:
+  - name: 'StigForge: continue after error in ''Regenerate the GRUB configuration after the audit change (grub2_audit_argument)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Regenerate the GRUB configuration after the audit change (grub2_audit_argument)'' raised an error
+        (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
+        state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_grub2_audit_argument | default(true) | bool)
+- block:
+  - name: Create the root-owned /snap/bin that Ubuntu's default PATH names (root_path_all_dirs)
+    ansible.builtin.file:
+      path: /snap/bin
+      state: directory
+      owner: root
+      group: root
+      mode: '0755'
+    tags:
+    - root_path_all_dirs
+  rescue:
+  - name: 'StigForge: continue after error in "Create the root-owned /snap/bin that Ubuntu''s default PATH names (root_path_all_dirs)"
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: "Create the root-owned /snap/bin that Ubuntu''s default PATH names (root_path_all_dirs)" raised an
+        error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
+        system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_root_path_all_dirs | default(true) | bool)
+- block:
+  - name: Find AppArmor profile files that are flagged unconfined
+    ansible.builtin.find:
+      paths: /etc/apparmor.d
+      file_type: file
+      recurse: false
+      contains: flags=\([^)]*\bunconfined\b[^)]*\)
+    register: stigforge_apparmor_unconfined
+    tags:
+    - all_apparmor_profiles_in_enforce_complain_mode
+  rescue:
+  - name: 'StigForge: continue after error in ''Find AppArmor profile files that are flagged unconfined'' (OpenSCAP is the
+      score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Find AppArmor profile files that are flagged unconfined'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_all_apparmor_profiles_in_enforce_complain_mode |
+    default(true) | bool)
+- block:
+  - name: Put unconfined AppArmor profiles in complain mode (all_apparmor_profiles_in_enforce_complain_mode)
+    ansible.builtin.replace:
+      path: '{{ item.path }}'
+      regexp: (flags=\([^)]*?)\bunconfined\b
+      replace: \1complain
+    loop: '{{ stigforge_apparmor_unconfined.files | default([]) }}'
+    loop_control:
+      label: '{{ item.path }}'
+    register: stigforge_apparmor_complain
+    tags:
+    - all_apparmor_profiles_in_enforce_complain_mode
+  rescue:
+  - name: 'StigForge: continue after error in ''Put unconfined AppArmor profiles in complain mode (all_apparmor_profiles_in_enforce_complain_mode)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Put unconfined AppArmor profiles in complain mode (all_apparmor_profiles_in_enforce_complain_mode)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_all_apparmor_profiles_in_enforce_complain_mode |
+    default(true) | bool)
+- block:
+  - name: Reload AppArmor so the complain flags take effect (all_apparmor_profiles_in_enforce_complain_mode)
+    ansible.builtin.service:
+      name: apparmor
+      state: reloaded
+    when: stigforge_apparmor_complain is changed
+    tags:
+    - all_apparmor_profiles_in_enforce_complain_mode
+  rescue:
+  - name: 'StigForge: continue after error in ''Reload AppArmor so the complain flags take effect (all_apparmor_profiles_in_enforce_complain_mode)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Reload AppArmor so the complain flags take effect (all_apparmor_profiles_in_enforce_complain_mode)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_all_apparmor_profiles_in_enforce_complain_mode |
+    default(true) | bool)
