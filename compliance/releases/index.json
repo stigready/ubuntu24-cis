@@ -18,5 +18,10 @@
     "version": "0.3.25",
     "role": "ubuntu24_cis",
     "matrix_status": "green"
+  },
+  {
+    "version": "0.3.26",
+    "role": "ubuntu24_cis",
+    "matrix_status": "green"
   }
 ]
