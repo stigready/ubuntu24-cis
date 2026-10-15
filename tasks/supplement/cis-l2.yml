@@ -465,6 +465,34 @@
   tags:
     - all_apparmor_profiles_in_enforce_complain_mode
 
+# Two profiles (busybox, nautilus) are loaded in the kernel as unconfined with NO definition on disk (diagnostic build,
+# stigready#4423, issue #113), so there is no file for the complain rewrite above to find, and a reload does not unload
+# a profile whose file is gone. Remove from the kernel exactly those: still unconfined after the reload AND defined
+# nowhere under /etc/apparmor.d or snapd's profile directory. This is what aa-remove-unknown does, without needing
+# apparmor-utils. A profile that has a definition is never touched here.
+- name: Unload unconfined AppArmor profiles that have no definition on disk (all_apparmor_profiles_in_enforce_complain_mode)
+  ansible.builtin.shell: |
+    set -eu
+    list=/sys/kernel/security/apparmor/profiles
+    [ -r "$list" ] || exit 0
+    removed=""
+    while IFS= read -r line; do
+      name="${line% (unconfined)}"
+      [ "$name" != "$line" ] || continue
+      if grep -rqsF -e "profile $name " -e "profile $name{" -e "profile \"$name\"" /etc/apparmor.d /var/lib/snapd/apparmor/profiles; then
+        continue
+      fi
+      printf '%s' "$name" > /sys/kernel/security/apparmor/.remove
+      removed="$removed $name"
+    done < "$list"
+    [ -z "$removed" ] || echo "removed:$removed"
+  args:
+    executable: /bin/bash
+  register: stigforge_apparmor_unloaded
+  changed_when: "'removed:' in stigforge_apparmor_unloaded.stdout"
+  tags:
+    - all_apparmor_profiles_in_enforce_complain_mode
+
 # nftables_rules_permanent (CIS 4.3.x). The OVAL needs /etc/nftables.conf to exist AND to carry an include "<file>" entry whose
 # file exists (ubuntu-24.04:cis-l2 2026-10-14: test_etc_nftables_conf_file and ..._include_file_exists both false). The conf
 # flushes and includes /etc/nftables.rules, which holds the stock accept-all table; the nftables service stays disabled, so
