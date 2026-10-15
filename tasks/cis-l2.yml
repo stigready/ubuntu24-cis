@@ -50323,6 +50323,28 @@
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_all_apparmor_profiles_in_enforce_complain_mode |
     default(true) | bool)
 - block:
+  - name: Unload unconfined AppArmor profiles that have no definition on disk (all_apparmor_profiles_in_enforce_complain_mode)
+    ansible.builtin.shell: "set -eu\nlist=/sys/kernel/security/apparmor/profiles\n[ -r \"$list\" ] || exit 0\nremoved=\"\"\
+      \nwhile IFS= read -r line; do\n  name=\"${line% (unconfined)}\"\n  [ \"$name\" != \"$line\" ] || continue\n  if grep\
+      \ -rqsF -e \"profile $name \" -e \"profile $name{\" -e \"profile \\\"$name\\\"\" /etc/apparmor.d /var/lib/snapd/apparmor/profiles;\
+      \ then\n    continue\n  fi\n  printf '%s' \"$name\" > /sys/kernel/security/apparmor/.remove\n  removed=\"$removed $name\"\
+      \ndone < \"$list\"\n[ -z \"$removed\" ] || echo \"removed:$removed\"\n"
+    args:
+      executable: /bin/bash
+    register: stigforge_apparmor_unloaded
+    changed_when: '''removed:'' in stigforge_apparmor_unloaded.stdout'
+    tags:
+    - all_apparmor_profiles_in_enforce_complain_mode
+  rescue:
+  - name: 'StigForge: continue after error in ''Unload unconfined AppArmor profiles that have no definition on disk (all_apparmor_profiles_in_enforce_complain_mode)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Unload unconfined AppArmor profiles that have no definition on disk (all_apparmor_profiles_in_enforce_complain_mode)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_all_apparmor_profiles_in_enforce_complain_mode |
+    default(true) | bool)
+- block:
   - name: Write /etc/nftables.rules with the stock accept-all table (nftables_rules_permanent)
     ansible.builtin.copy:
       dest: /etc/nftables.rules
