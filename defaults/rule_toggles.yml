@@ -9,6 +9,7 @@ ubuntu24cis_accounts_no_uid_except_zero: true
 ubuntu24cis_accounts_password_pam_dcredit: true
 ubuntu24cis_accounts_password_pam_dictcheck: true
 ubuntu24cis_accounts_password_pam_difok: true
+ubuntu24cis_accounts_password_pam_enforce_root: true
 ubuntu24cis_accounts_password_pam_enforcing: true
 ubuntu24cis_accounts_password_pam_lcredit: true
 ubuntu24cis_accounts_password_pam_maxrepeat: true

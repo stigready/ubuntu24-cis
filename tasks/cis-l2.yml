@@ -4083,6 +4083,36 @@
         OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_password_pam_difok | default(true) | bool)
 - block:
+  - name: Ensure PAM Enforces Password Requirements - Enforce for root User
+    ansible.builtin.lineinfile:
+      path: /etc/security/pwquality.conf
+      create: true
+      regexp: ''
+      line: enforce_for_root
+      state: present
+    when:
+    - '"linux-base" in ansible_facts.packages'
+    - '"libpwquality1" in ansible_facts.packages'
+    tags:
+    - NIST-800-53-CM-6(a)
+    - NIST-800-53-IA-5(1)(a)
+    - NIST-800-53-IA-5(4)
+    - NIST-800-53-IA-5(c)
+    - accounts_password_pam_enforce_root
+    - low_complexity
+    - low_disruption
+    - medium_severity
+    - no_reboot_needed
+    - restrict_strategy
+  rescue:
+  - name: 'StigForge: continue after error in ''Ensure PAM Enforces Password Requirements - Enforce for root User'' (OpenSCAP
+      is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Ensure PAM Enforces Password Requirements - Enforce for root User'' raised an error (module or templating)
+        and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_password_pam_enforce_root | default(true)
+    | bool)
+- block:
   - name: Ensure PAM Enforces Password Requirements - Enforcing - Check if system relies on pam-auth-update tool
     ansible.builtin.stat:
       path: /usr/sbin/pam-auth-update
