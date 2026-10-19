@@ -30414,3 +30414,102 @@
         (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system
         state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_rules_permanent | default(true) | bool)
+- block:
+  - name: Write /etc/nftables.rules with the default-deny ruleset (nftables_ensure_default_deny_policy)
+    ansible.builtin.copy:
+      dest: /etc/nftables.rules
+      owner: root
+      group: root
+      mode: '0640'
+      content: "# StigReady default-deny host firewall (nftables_ensure_default_deny_policy, owner decision 2026-10-19).\n\
+        # All three base chains drop; only the traffic allowed below passes. Add your own service ports here.\ntable inet\
+        \ filter {\n\tchain input {\n\t\ttype filter hook input priority filter; policy drop;\n\t\t# Loopback (set_nftables_loopback_traffic):\
+        \ lo traffic passes, loopback source addresses arriving on any\n\t\t# other interface are spoofed and dropped. Kept\
+        \ first: the SSG check reads this chain only up to the first \"}\".\n\t\tiif \"lo\" accept\n\t\tip saddr 127.0.0.0/8\
+        \ counter drop\n\t\tip6 saddr ::1 counter drop\n\t\t# Replies to connections this host opened. ICMPv4/ICMPv6 errors\
+        \ for those flows (unreachable,\n\t\t# fragmentation-needed / packet-too-big for path MTU discovery, time-exceeded)\
+        \ arrive as related.\n\t\tct state established,related accept\n\t\t# Inbound SSH.\n\t\ttcp dport 22 accept\n\t\t#\
+        \ EC2 needs: DHCPv4 server replies. The lease request is broadcast, so conntrack cannot match the reply.\n\t\tudp\
+        \ sport 67 udp dport 68 accept\n\t\t# EC2 needs: DHCPv6 server replies (IPv6-enabled subnets). The request goes to\
+        \ multicast ff02::1:2, so the\n\t\t# reply is not tracked.\n\t\tudp sport 547 udp dport 546 accept\n\t\t# EC2 needs:\
+        \ IPv6 neighbour discovery (address resolution, duplicate-address detection) and router\n\t\t# advertisements (default\
+        \ route). conntrack does not track these.\n\t\ticmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-advert\
+        \ } accept\n\t}\n\tchain forward {\n\t\t# Not a router: nothing is forwarded.\n\t\ttype filter hook forward priority\
+        \ filter; policy drop;\n\t}\n\tchain output {\n\t\ttype filter hook output priority filter; policy drop;\n\t\t# Loopback\
+        \ (local services, e.g. systemd-resolved on 127.0.0.53).\n\t\toif \"lo\" accept\n\t\t# Replies on connections accepted\
+        \ inbound (SSH) and the rest of flows allowed below.\n\t\tct state established,related accept\n\t\t# DNS (VPC resolver\
+        \ 169.254.169.253 / base+2 or any configured resolver).\n\t\tudp dport 53 accept\n\t\ttcp dport 53 accept\n\t\t# NTP\
+        \ (Amazon Time Sync 169.254.169.123 or public pools).\n\t\tudp dport 123 accept\n\t\t# HTTP/HTTPS: package repositories,\
+        \ EC2 instance metadata (169.254.169.254, fd00:ec2::254), SSM endpoints.\n\t\ttcp dport { 80, 443 } accept\n\t\t#\
+        \ EC2 needs: DHCPv4 lease requests and renewals.\n\t\tudp sport 68 udp dport 67 accept\n\t\t# EC2 needs: DHCPv6 requests\
+        \ (IPv6-enabled subnets).\n\t\tudp sport 546 udp dport 547 accept\n\t\t# EC2 needs: IPv6 neighbour discovery answers/probes\
+        \ and router solicitation at link-up.\n\t\ticmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit\
+        \ } accept\n\t}\n}\n"
+    when: '"nftables" in ansible_facts.packages'
+    tags:
+    - nftables_ensure_default_deny_policy
+  rescue:
+  - name: 'StigForge: continue after error in ''Write /etc/nftables.rules with the default-deny ruleset (nftables_ensure_default_deny_policy)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Write /etc/nftables.rules with the default-deny ruleset (nftables_ensure_default_deny_policy)'' raised
+        an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting
+        system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_ensure_default_deny_policy | default(true)
+    | bool)
+- block:
+  - name: Start connection tracking before the default-deny load so the play's SSH session survives (nftables_ensure_default_deny_policy)
+    ansible.builtin.shell: 'set -euo pipefail
+
+      if nft list ruleset | grep ''[[:space:]]ct state'' >/dev/null; then exit 0; fi
+
+      nft ''add table inet stigforge_ct_prime; add chain inet stigforge_ct_prime output { type filter hook output priority
+      0; policy accept; }; add rule inet stigforge_ct_prime output ct state established counter''
+
+      '
+    args:
+      executable: /bin/bash
+    changed_when: false
+    when: '"nftables" in ansible_facts.packages'
+    tags:
+    - nftables_ensure_default_deny_policy
+  rescue:
+  - name: 'StigForge: continue after error in "Start connection tracking before the default-deny load so the play''s SSH session
+      survives (nftables_ensure_default_deny_policy)" (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: "Start connection tracking before the default-deny load so the play''s SSH session survives (nftables_ensure_default_deny_policy)"
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_ensure_default_deny_policy | default(true)
+    | bool)
+- block:
+  - name: Load /etc/nftables.conf so the running ruleset is the default-deny one (nftables_ensure_default_deny_policy)
+    ansible.builtin.shell: 'set -euo pipefail
+
+      nft -c -f /etc/nftables.conf
+
+      before="$(nft -s list ruleset)"
+
+      nft -f /etc/nftables.conf
+
+      after="$(nft -s list ruleset)"
+
+      if [ "$before" != "$after" ]; then echo "ruleset reloaded"; fi
+
+      '
+    args:
+      executable: /bin/bash
+    register: stigforge_nftables_load
+    changed_when: '''ruleset reloaded'' in stigforge_nftables_load.stdout'
+    when: '"nftables" in ansible_facts.packages'
+    tags:
+    - nftables_ensure_default_deny_policy
+  rescue:
+  - name: 'StigForge: continue after error in ''Load /etc/nftables.conf so the running ruleset is the default-deny one (nftables_ensure_default_deny_policy)''
+      (OpenSCAP is the score gate)'
+    ansible.builtin.debug:
+      msg: 'StigForge: ''Load /etc/nftables.conf so the running ruleset is the default-deny one (nftables_ensure_default_deny_policy)''
+        raised an error (module or templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the
+        resulting system state independently.'
+  when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_ensure_default_deny_policy | default(true)
+    | bool)

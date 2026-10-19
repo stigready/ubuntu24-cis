@@ -361,9 +361,9 @@
 
 # nftables_rules_permanent (CIS 4.3): /etc/nftables.conf must exist. The image carried no nftables at all
 # (ubuntu-24.04:cis-l1 2026-10-13, OVAL test_etc_nftables_conf_file false). The package ships /etc/nftables.conf with an
-# accept-all default and leaves nftables.service disabled, so installing it changes no network behaviour: customers
-# keep EC2 security groups as the perimeter and layer their own ruleset on top. A default-deny host ruleset would be a
-# cloud-usability decision (it can lock out the cloud user), which is not made here.
+# accept-all default; the default-deny ruleset written later in this supplement replaces it (owner 2026-10-19, "Meet it:
+# drop-all + explicit allows", nftables_ensure_default_deny_policy), with inbound SSH kept open so the cloud user is never
+# locked out.
 - name: Install nftables so /etc/nftables.conf exists (nftables_rules_permanent)
   ansible.builtin.apt:
     name: nftables
@@ -495,8 +495,8 @@
 
 # nftables_rules_permanent (CIS 4.3.x). The OVAL needs /etc/nftables.conf to exist AND to carry an include "<file>" entry whose
 # file exists (ubuntu-24.04:cis-l2 2026-10-14: test_etc_nftables_conf_file and ..._include_file_exists both false). The conf
-# flushes and includes /etc/nftables.rules, which holds the stock accept-all table; the nftables service stays disabled, so
-# no network behaviour changes. A default-deny ruleset would be a cloud-usability decision and is not written here.
+# flushes and includes /etc/nftables.rules. The stock accept-all table below is only the first-write placeholder (force: false);
+# with nftables_ensure_default_deny_policy on (the default) the default-deny ruleset after the conf task replaces it.
 - name: Write /etc/nftables.rules with the stock accept-all table (nftables_rules_permanent)
   ansible.builtin.copy:
     dest: /etc/nftables.rules
@@ -703,3 +703,304 @@
     label: '{{ item.path }}'
   tags:
     - file_permissions_etc_audit_rulesd
+
+# nftables_ensure_default_deny_policy (CIS 4.3.x, "Ensure nftables default deny firewall policy"). Owner decision 2026-10-19:
+# "Meet it: drop-all + explicit allows". ubuntu-24.04:cis-l1 leg 3aa7c4fe55c4 failed it: the SCE check reads `nft list ruleset`
+# and needs `policy drop` on the input, forward AND output hooks. nftables is the image's only firewall (ufw is removed), and
+# nftables.service (service_nftables_enabled) loads /etc/nftables.conf -> /etc/nftables.rules at every boot, so the ruleset is
+# written there: same table (inet filter) and chain names (input/forward/output) the generated set_nftables_* tasks use, and the
+# loopback rules of set_nftables_loopback_traffic, so those rules keep passing at runtime and after a reboot.
+# The allows are the approved set (established/related, loopback, inbound SSH, outbound DNS/NTP/HTTP/HTTPS) plus only what an EC2
+# instance needs to keep its address and route (DHCPv4, DHCPv6, IPv6 neighbour discovery); each is explained in the file. Any other
+# port (application listeners, outbound SMTP, ...) is the customer's to add to /etc/nftables.rules.
+# The generated "Add Base Chains" task (var_nftables_base_chain_policies, accept) runs before this supplement; the atomic load
+# below replaces whatever it left in the running ruleset, so the play ends with the persisted ruleset live.
+- name: Write /etc/nftables.rules with the default-deny ruleset (nftables_ensure_default_deny_policy)
+  ansible.builtin.copy:
+    dest: /etc/nftables.rules
+    owner: root
+    group: root
+    mode: "0640"
+    content: |
+      # StigReady default-deny host firewall (nftables_ensure_default_deny_policy, owner decision 2026-10-19).
+      # All three base chains drop; only the traffic allowed below passes. Add your own service ports here.
+      table inet filter {
+      	chain input {
+      		type filter hook input priority filter; policy drop;
+      		# Loopback (set_nftables_loopback_traffic): lo traffic passes, loopback source addresses arriving on any
+      		# other interface are spoofed and dropped. Kept first: the SSG check reads this chain only up to the first "}".
+      		iif "lo" accept
+      		ip saddr 127.0.0.0/8 counter drop
+      		ip6 saddr ::1 counter drop
+      		# Replies to connections this host opened. ICMPv4/ICMPv6 errors for those flows (unreachable,
+      		# fragmentation-needed / packet-too-big for path MTU discovery, time-exceeded) arrive as related.
+      		ct state established,related accept
+      		# Inbound SSH.
+      		tcp dport 22 accept
+      		# EC2 needs: DHCPv4 server replies. The lease request is broadcast, so conntrack cannot match the reply.
+      		udp sport 67 udp dport 68 accept
+      		# EC2 needs: DHCPv6 server replies (IPv6-enabled subnets). The request goes to multicast ff02::1:2, so the
+      		# reply is not tracked.
+      		udp sport 547 udp dport 546 accept
+      		# EC2 needs: IPv6 neighbour discovery (address resolution, duplicate-address detection) and router
+      		# advertisements (default route). conntrack does not track these.
+      		icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-advert } accept
+      	}
+      	chain forward {
+      		# Not a router: nothing is forwarded.
+      		type filter hook forward priority filter; policy drop;
+      	}
+      	chain output {
+      		type filter hook output priority filter; policy drop;
+      		# Loopback (local services, e.g. systemd-resolved on 127.0.0.53).
+      		oif "lo" accept
+      		# Replies on connections accepted inbound (SSH) and the rest of flows allowed below.
+      		ct state established,related accept
+      		# DNS (VPC resolver 169.254.169.253 / base+2 or any configured resolver).
+      		udp dport 53 accept
+      		tcp dport 53 accept
+      		# NTP (Amazon Time Sync 169.254.169.123 or public pools).
+      		udp dport 123 accept
+      		# HTTP/HTTPS: package repositories, EC2 instance metadata (169.254.169.254, fd00:ec2::254), SSM endpoints.
+      		tcp dport { 80, 443 } accept
+      		# EC2 needs: DHCPv4 lease requests and renewals.
+      		udp sport 68 udp dport 67 accept
+      		# EC2 needs: DHCPv6 requests (IPv6-enabled subnets).
+      		udp sport 546 udp dport 547 accept
+      		# EC2 needs: IPv6 neighbour discovery answers/probes and router solicitation at link-up.
+      		icmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit } accept
+      	}
+      }
+  when: '"nftables" in ansible_facts.packages'
+  tags:
+    - nftables_ensure_default_deny_policy
+
+# The SSH session running this play must survive the load. conntrack only starts tracking in this network namespace once a ruleset
+# uses a ct expression; the generated nftables tasks add none, so this session has no conntrack entry yet. If the first packet seen
+# after the load were outbound (this task's own result going back), it would be state new and the output chain, which has no
+# source-port-22 allow, would drop it and stall the session. A transient table with a ct rule makes conntrack pick the session up
+# from the packets exchanged between this task and the load; the load's `flush ruleset` removes it. Skipped once any ct rule is live.
+- name: Start connection tracking before the default-deny load so the play's SSH session survives (nftables_ensure_default_deny_policy)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    if nft list ruleset | grep '[[:space:]]ct state' >/dev/null; then exit 0; fi
+    nft 'add table inet stigforge_ct_prime; add chain inet stigforge_ct_prime output { type filter hook output priority 0; policy accept; }; add rule inet stigforge_ct_prime output ct state established counter'
+  args:
+    executable: /bin/bash
+  changed_when: false
+  when: '"nftables" in ansible_facts.packages'
+  tags:
+    - nftables_ensure_default_deny_policy
+
+# One `nft -f` transaction (flush ruleset + include): the drop policies and the SSH allow go live together, never one without the
+# other. Validated first with `nft -c`. Reports changed only when the running ruleset (stateless listing) actually differed.
+- name: Load /etc/nftables.conf so the running ruleset is the default-deny one (nftables_ensure_default_deny_policy)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    nft -c -f /etc/nftables.conf
+    before="$(nft -s list ruleset)"
+    nft -f /etc/nftables.conf
+    after="$(nft -s list ruleset)"
+    if [ "$before" != "$after" ]; then echo "ruleset reloaded"; fi
+  args:
+    executable: /bin/bash
+  register: stigforge_nftables_load
+  changed_when: "'ruleset reloaded' in stigforge_nftables_load.stdout"
+  when: '"nftables" in ansible_facts.packages'
+  tags:
+    - nftables_ensure_default_deny_policy
+
+# audit_rules_privileged_commands (CIS 6.2.3.6, cis-l2). ubuntu-24.04:cis-l2 leg d572c5d41b14 failed it with 23 setuid/setgid binaries
+# (chage, passwd, su, sudo, mount, unix_chkpwd, postdrop, ...) unaudited: SSG 0.1.82 ships only a bash fix for ubuntu2404, so the
+# generator emitted nothing. The SCE check lists every file with -perm /6000 (find -xdev) on each local mount whose type is not a
+# nodev filesystem and whose options carry neither noexec nor nosuid, and needs EXACTLY ONE line per binary in
+# /etc/audit/rules.d/*.rules matching `-a always,exit -F path=<bin> [-F perm=x] -F auid>=1000 -F auid!=unset (-k|-F key=)<key>`;
+# a missing or a duplicate rule fails. The listing below mirrors that mount selection and matching (the same regex and
+# `-F path=<bin>\b` count), and skips any binary already ruled outside this block (the generated chacl/setfacl/chcon/kmod/usermod
+# tasks also write privileged.rules), so nothing is duplicated. It runs at the end of the supplement, after every package install
+# in the play, so binaries those installs add are covered. A managed block keeps the other lines of privileged.rules intact.
+- name: List setuid/setgid binaries without a privileged-command audit rule (audit_rules_privileged_commands)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    shopt -s nullglob
+    regex='^[\s]*-a always,exit (?:-F path=([\S]+))+(?: -F perm=x)? -F auid>=1000 -F auid!=(?:4294967295|unset|-1)[\s]+(?:-k[\s]+|-F[\s]+key=)[\S]+[\s]*$'
+    ruled=$(for f in /etc/audit/rules.d/*.rules; do
+              awk '/^# BEGIN STIGFORGE audit_rules_privileged_commands$/ {skip=1; next}
+                   /^# END STIGFORGE audit_rules_privileged_commands$/ {skip=0; next}
+                   !skip' "$f"
+            done | grep -P -- "$regex" || true)
+    filter_nodev=$(awk '/nodev/ { print $2 }' /proc/filesystems | paste -sd,)
+    readarray -t partitions < <(findmnt -n -l -k -it "${filter_nodev}" | grep -Pv "noexec|nosuid|/proc($|/.*$)" | awk '{ print $1 }')
+    for partition in "${partitions[@]}"; do
+      while IFS= read -r -d $'\0' bin; do
+        n=$(grep -Pc -- "-F path=${bin}\b" <<< "${ruled}" || true)
+        if [ "${n:-0}" -eq 0 ]; then printf '%s\n' "${bin}"; fi
+      done < <(find "${partition}" -xdev -type f -perm /6000 -print0)
+    done | LC_ALL=C sort -u
+  args:
+    executable: /bin/bash
+  register: stigforge_privileged_unruled
+  changed_when: false
+  tags:
+    - audit_rules_privileged_commands
+
+- name: Audit every setuid/setgid binary once in /etc/audit/rules.d/privileged.rules (audit_rules_privileged_commands)
+  ansible.builtin.blockinfile:
+    path: /etc/audit/rules.d/privileged.rules
+    create: true
+    owner: root
+    group: root
+    mode: "0600"  # what the generated audit_rules_execution_* tasks set on this file; a different mode would flap on every run
+    marker: "# {mark} STIGFORGE audit_rules_privileged_commands"
+    block: |
+      {% for bin in stigforge_privileged_unruled.stdout_lines %}
+      -a always,exit -F path={{ bin }} -F perm=x -F auid>=1000 -F auid!=unset -k privileged
+      {% endfor %}
+  register: stigforge_privileged_rules
+  tags:
+    - audit_rules_privileged_commands
+
+# The SCE reads the rules.d files; loading them makes the running audit config match. Skipped when the loaded config is already
+# immutable (-e 2, audit_rules_immutable): the kernel refuses changes until reboot, and the next boot loads these files.
+- name: Load the audit rules after the privileged-command rules changed (audit_rules_privileged_commands)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    if auditctl -s | grep -q '^enabled 2'; then echo "immutable, loaded at next boot"; exit 0; fi
+    augenrules --load
+  args:
+    executable: /bin/bash
+  register: stigforge_privileged_load
+  changed_when: "'immutable' not in stigforge_privileged_load.stdout"
+  when: stigforge_privileged_rules is changed
+  tags:
+    - audit_rules_privileged_commands
+
+# all_apparmor_profiles_enforced (CIS 1.3.1.4, cis-l2). ubuntu-24.04:cis-l2 leg d572c5d41b14 had 94 profiles in complain: Ubuntu
+# 24.04's flags=(unconfined) user-namespace stubs (runc, crun, podman, buildah, lxc-*, sbuild-*, browsers, flatpak, ...) that the
+# all_apparmor_profiles_in_enforce_complain_mode tasks above turn into complain. The SCE check needs every loaded profile in enforce
+# (aa-status --profiled == --enforced, and no process unconfined with a profile defined); the OVAL fails on any line of
+# /sys/kernel/security/apparmor/profiles ending in (complain|kill|unconfined). Owner decision 2026-10-19: "Enforce installed,
+# disable absent". This runs after the complain conversion above, so for each top-level profile file in /etc/apparmor.d:
+#   - the program it attaches to exists on the image (or the profile attaches by name only, e.g. lsb_release, ubuntu_pro_*):
+#     complain/unconfined/kill are removed from its flags=(...) and it is reloaded (apparmor_parser -r) in enforce mode;
+#   - every program it attaches to is absent: it is linked into /etc/apparmor.d/disable/ (apparmor.service skips it at boot)
+#     and unloaded (apparmor_parser -R).
+# A loaded, non-enforcing profile that no enabled file defines is removed from the kernel. Attachment globs ({a,b}, *, **, @{var})
+# are expanded the way AppArmor matches them; an unresolved variable matches anything.
+# TRADE-OFF: a customer who later installs one of those applications must re-enable its profile, or the application cannot create
+# user namespaces (unprivileged userns creation is mediated by AppArmor on 24.04):
+#     sudo rm /etc/apparmor.d/disable/<profile> && sudo apparmor_parser -r /etc/apparmor.d/<profile>
+# and, to keep this rule passing, set that profile to enforce (aa-enforce) - an enforced userns stub allows only `userns`.
+- name: Enforce AppArmor profiles of installed programs, disable those of absent ones (all_apparmor_profiles_enforced)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    [ -r /sys/kernel/security/apparmor/profiles ] || { echo "apparmor not active"; exit 0; }
+    python3 - <<'PY'
+    import glob, os, re, subprocess
+    D = "/etc/apparmor.d"
+    DIS = D + "/disable"
+    KERNEL = "/sys/kernel/security/apparmor/profiles"
+    HDR = re.compile(r'^\s*(?:profile\s+(?P<name>"[^"]+"|\S+)(?:\s+(?P<attach>"[^"]+"|[/@]\S*))?|(?P<path>"/[^"]+"|/\S+))'
+                     r'\s*(?:flags\s*=\s*\((?P<flags>[^)]*)\))?\s*\{')
+    VAR = re.compile(r'^\s*@\{(\w+)\}\s*\+?=\s*(.+?)\s*$')
+    NOT_ENFORCE = {"complain", "unconfined", "kill"}
+    changed = []
+
+    def loaded():
+        modes = {}
+        with open(KERNEL) as fh:
+            for line in fh:
+                m = re.match(r'^(.*) \((\w+)\)$', line.rstrip("\n"))
+                if m and "//" not in m.group(1):
+                    modes[m.group(1)] = m.group(2)
+        return modes
+
+    def expand(p):
+        m = re.search(r'\{([^{}]*)\}', p)
+        if not m:
+            return [p]
+        return [x for alt in m.group(1).split(",") for x in expand(p[:m.start()] + alt + p[m.end():])]
+
+    def resolve(p, var):
+        for _ in range(5):
+            q = re.sub(r'@\{(\w+)\}', lambda m: "{" + ",".join(var[m.group(1)]) + "}" if m.group(1) in var else "*", p)
+            if q == p:
+                break
+            p = q
+        return p
+
+    def top_profiles(text):
+        var = {"multiarch": ["*-linux-gnu*"], "HOME": ["/home/*", "/root"]}
+        tops, depth = [], 0
+        for raw in text.splitlines():
+            line = "" if raw.lstrip().startswith("#") else raw.split("#", 1)[0]
+            if depth == 0:
+                v = VAR.match(line)
+                if v:
+                    var.setdefault(v.group(1), []).extend(x.strip('"') for x in v.group(2).split())
+                h = HDR.match(line)
+                if h:
+                    attach = h.group("attach") or h.group("path")
+                    tops.append(((h.group("name") or attach).strip('"'), attach.strip('"') if attach else None))
+            depth += line.count("{") - line.count("}")
+        return tops, var
+
+    def installed(tops, var):
+        if any(a is None for _, a in tops):
+            return True  # attaches by name (systemd AppArmorProfile=, aa-exec, change_profile): keep it, enforced
+        return any(glob.glob(p, recursive=True) for _, a in tops for p in expand(resolve(a, var)))
+
+    def strip_flags(m):
+        kept = [f for f in re.split(r'[\s,]+', m.group(1).strip()) if f and f not in NOT_ENFORCE]
+        return (" flags=(" + ", ".join(kept) + ")") if kept else ""
+
+    os.makedirs(DIS, exist_ok=True)
+    modes = loaded()
+    defined = set()
+    for f in sorted(glob.glob(D + "/*")):
+        if not os.path.isfile(f) or os.path.islink(f):
+            continue
+        base = os.path.basename(f)
+        text = open(f, errors="replace").read()
+        tops, var = top_profiles(text)
+        if not tops:
+            continue
+        names = [n for n, _ in tops]
+        if os.path.lexists(os.path.join(DIS, base)) or not installed(tops, var):
+            if not os.path.lexists(os.path.join(DIS, base)):
+                os.symlink(f, os.path.join(DIS, base))
+                changed.append("disabled " + base)
+            if any(n in modes for n in names):
+                subprocess.run(["apparmor_parser", "-R", f], check=True, stdout=subprocess.DEVNULL)
+                changed.append("unloaded " + base)
+            continue
+        defined.update(names)
+        new = re.sub(r'\s*\bflags\s*=\s*\(([^)]*)\)', strip_flags, text)
+        fc = os.path.join(D, "force-complain", base)
+        if os.path.lexists(fc):
+            os.unlink(fc)
+            changed.append("force-complain removed " + base)
+        if new != text:
+            with open(f, "w") as fh:
+                fh.write(new)
+            changed.append("enforce flags " + base)
+        if new != text or any(modes.get(n) != "enforce" for n in names):
+            subprocess.run(["apparmor_parser", "-r", f], check=True, stdout=subprocess.DEVNULL)
+            changed.append("enforced " + base)
+    for name, mode in loaded().items():
+        if mode != "enforce" and name not in defined:
+            with open("/sys/kernel/security/apparmor/.remove", "w") as fh:
+                fh.write(name)
+            changed.append("removed " + name)
+    left = [f"{n} ({m})" for n, m in loaded().items() if m != "enforce"]
+    print("changed: " + "; ".join(changed) if changed else "unchanged")
+    if left:
+        print("still not enforcing: " + ", ".join(left))
+    PY
+  args:
+    executable: /bin/bash
+  register: stigforge_apparmor_enforced
+  changed_when: "'changed:' in stigforge_apparmor_enforced.stdout"
+  when: '"apparmor" in ansible_facts.packages'
+  tags:
+    - all_apparmor_profiles_enforced
