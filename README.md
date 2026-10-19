@@ -2,7 +2,7 @@
 
 **Ansible hardening role** for **Ubuntu 24.04 LTS** (CIS Benchmark). Suitable for playbooks, Packer/Ansible provisioners, and golden-image pipelines. Search keywords: `ansible`, `ansible-role`, `cis`, `cis-benchmark`, `cis-hardening`, `compliance`, `devsecops`, `hardening`, `infrastructure`, `noble`, `openscap`, `security`, `stigforge`, `ubuntu`.
 
-StigForge-exported Ansible role **`ubuntu24_cis`** · release **`0.3.41`**.
+StigForge-exported Ansible role **`ubuntu24_cis`** · release **`0.3.42`**.
 Matrix cell status: **`green`**.
 
 ## Install (Ansible Galaxy)
@@ -13,7 +13,7 @@ lives under `compliance/` and is not loaded when the role runs.
 From **Ansible Galaxy** (after import; namespace `stigready`):
 
 ```bash
-ansible-galaxy role install stigready.ubuntu24_cis,0.3.41
+ansible-galaxy role install stigready.ubuntu24_cis,0.3.42
 ```
 
 From **GitHub** (public):
@@ -23,7 +23,7 @@ From **GitHub** (public):
 roles:
   - src: https://github.com/stigready/ubuntu24-cis
     scm: git
-    version: v0.3.41   # or an immutable commit SHA
+    version: v0.3.42   # or an immutable commit SHA
     name: ubuntu24_cis
 ```
 
@@ -47,7 +47,7 @@ These rules are excluded from the OpenSCAP score gate. Most depend on the networ
 |---|---|---|---|
 | `kernel_module_overlayfs_disabled` | CIS Level 2: Ensure overlayfs kernel module is not available | Does not block the overlay module: no `install overlay /bin/false` and no blacklist line. The generated SSG tasks that wrote /etc/modprobe.d/overlay.conf are stripped. | Where no container runtime is used, add `install overlayfs /bin/false` to /etc/modprobe.d/overlayfs.conf, as the CIS control states. |
 
-Full artifacts per profile: `compliance/releases/0.3.41/<profile>/` (`score.json`, `results.xml`, `arf.xml`, `evidence.json`, `evidence-report.html`, `poam.md`).
+Full artifacts per profile: `compliance/releases/0.3.42/<profile>/` (`score.json`, `results.xml`, `arf.xml`, `evidence.json`, `evidence-report.html`, `poam.md`).
 
 ## Reports & review
 
@@ -60,7 +60,7 @@ Full artifacts per profile: `compliance/releases/0.3.41/<profile>/` (`score.json
 Re-run OpenSCAP in Docker and compare to this release's evidence:
 
 ```bash
-make prove RELEASE=0.3.41
+make prove RELEASE=0.3.42
 ```
 
 Or score your own `results.xml`: see **[compliance/README.md](compliance/README.md)**.
@@ -72,7 +72,7 @@ Or score your own `results.xml`: see **[compliance/README.md](compliance/README.
 
 ## Factory
 
-- Monorepo: [stigready/stigforge](https://github.com/stigready/stigforge) @ `3ede14df7f99034ff9192cf842fc93a92dab6f70`
-- CI run: https://github.com/stigready/stigforge/actions/runs/39234799252
+- Monorepo: [stigready/stigforge](https://github.com/stigready/stigforge) @ `e07f386623f1f6fbecefcc1435539bc9a175cfdd`
+- CI run: https://github.com/stigready/stigforge/actions/runs/39294275173
 - Catalog: [https://stigready.com/#stigforge](https://stigready.com/#stigforge)
 
