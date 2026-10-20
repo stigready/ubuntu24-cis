@@ -572,8 +572,10 @@
     - file_group_ownership_var_log_audit
     - file_permissions_var_log_audit
 
-# audit_rules_session_events / audit_rules_networkconfig_modification (CIS 6.3.3.x). The 32-bit syscall rule is written only
-# where the kernel has a 32-bit personality (x86_64); an unsupported arch=b32 rule makes augenrules fail the whole load.
+# audit_rules_session_events / audit_rules_networkconfig_modification (CIS 6.3.3.x). SSG's OVAL requires the arch=b32 syscall rule
+# on every architecture. It was once written on x86_64 only, on the belief that arch=b32 fails augenrules elsewhere; on Ubuntu 24.04
+# arm64 (kernel 6.8, CONFIG_COMPAT=y) auditd maps b32 to the arm table and the rule loads (augenrules rc=0, listed by auditctl -l;
+# tested 2026-10-20), and ubuntu-24.04-arm64:cis-l2 failed the gate without it.
 - name: Audit rules for session events and network environment changes
   ansible.builtin.copy:
     dest: /etc/audit/rules.d/50-stigready-session-network.rules
@@ -585,9 +587,7 @@
       -w /var/log/wtmp -p wa -k session
       -w /var/log/btmp -p wa -k session
       -a always,exit -F arch=b64 -S sethostname,setdomainname -k system-locale
-      {% if ansible_facts['architecture'] == 'x86_64' %}
       -a always,exit -F arch=b32 -S sethostname,setdomainname -k system-locale
-      {% endif %}
       -w /etc/issue -p wa -k system-locale
       -w /etc/issue.net -p wa -k system-locale
       -w /etc/hosts -p wa -k system-locale
