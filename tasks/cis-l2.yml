@@ -1,14 +1,14 @@
 # Source: ComplianceAsCode/content (scap-security-guide) - BSD-3-Clause
 # Imported by StigForge; cloud-breaker tasks stripped per policy/cloud-ami.yml
 ---
-- name: 'StigForge: gather package facts before any rule reads them (stigforge#82)'
+- name: 'StigForge: gather package facts before any rule reads them'
   ansible.builtin.package_facts:
     manager: auto
   tags:
   - always
   - stigforge
   - facts
-- name: 'StigForge: gather service facts before any rule reads them (stigforge#82)'
+- name: 'StigForge: gather service facts before any rule reads them'
   ansible.builtin.service_facts: null
   tags:
   - always
@@ -56,7 +56,7 @@
       msg: 'StigForge: ''Ensure aide is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_aide_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure aide is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure aide is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -90,7 +90,7 @@
         templating) and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_aide_check_audit_tools | default(true) | bool)
 - name: 'StigForge: refresh package facts after ''Configure AIDE to Verify the Audit Tools - Ensure AIDE is Installed'' installed
-    a package (stigforge#83)'
+    a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -143,7 +143,7 @@
       msg: 'StigForge: ''Ensure sudo is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_sudo_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure sudo is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure sudo is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -171,7 +171,7 @@
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_pam_modules_installed | default(true) |
     bool)
-- name: 'StigForge: refresh package facts after ''Ensure libpam-modules is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure libpam-modules is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -200,7 +200,7 @@
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_pam_pwquality_installed | default(true)
     | bool)
-- name: 'StigForge: refresh package facts after ''Ensure libpam-pwquality is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure libpam-pwquality is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -227,7 +227,7 @@
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_pam_runtime_installed | default(true) |
     bool)
-- name: 'StigForge: refresh package facts after ''Ensure libpam-runtime is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure libpam-runtime is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -253,7 +253,7 @@
     ansible.builtin.debug:
       msg: 'StigForge: ''Ensure apparmor-utils is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
-- name: 'StigForge: refresh package facts after ''Ensure apparmor-utils is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure apparmor-utils is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -281,7 +281,7 @@
       msg: 'StigForge: ''Ensure apparmor is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_apparmor_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure apparmor is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure apparmor is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -309,7 +309,7 @@
       msg: 'StigForge: ''Ensure rsyslog is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_rsyslog_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure rsyslog is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure rsyslog is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -335,7 +335,7 @@
     ansible.builtin.debug:
       msg: 'StigForge: ''Ensure systemd-journal-remote is installed'' raised an error (module or templating) and was skipped;
         continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
-- name: 'StigForge: refresh package facts after ''Ensure systemd-journal-remote is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure systemd-journal-remote is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -363,7 +363,7 @@
     ansible.builtin.debug:
       msg: 'StigForge: ''Ensure iptables-persistent is installed'' raised an error (module or templating) and was skipped;
         continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
-- name: 'StigForge: refresh package facts after ''Ensure iptables-persistent is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure iptables-persistent is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -394,7 +394,7 @@
       msg: 'StigForge: ''Ensure iptables is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_iptables_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure iptables is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure iptables is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -445,7 +445,7 @@
       msg: 'StigForge: ''Ensure nftables is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_nftables_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure nftables is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure nftables is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -475,7 +475,7 @@
       msg: 'StigForge: ''Ensure ufw is installed'' raised an error (module or templating) and was skipped; continuing so later
         rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_ufw_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure ufw is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure ufw is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -566,7 +566,7 @@
       msg: 'StigForge: ''Ensure cron is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_cron_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure cron is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure cron is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -888,7 +888,7 @@
       msg: 'StigForge: ''Ensure chrony is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_chrony_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure chrony is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure chrony is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -919,7 +919,7 @@
       msg: 'StigForge: ''Ensure systemd-timesyncd is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_timesyncd_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure systemd-timesyncd is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure systemd-timesyncd is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -1224,7 +1224,7 @@
     ansible.builtin.debug:
       msg: 'StigForge: ''Ensure audispd-plugins is installed'' raised an error (module or templating) and was skipped; continuing
         so later rules still run. OpenSCAP evaluates the resulting system state independently.'
-- name: 'StigForge: refresh package facts after ''Ensure audispd-plugins is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure audispd-plugins is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -1262,7 +1262,7 @@
       msg: 'StigForge: ''Ensure auditd is installed'' raised an error (module or templating) and was skipped; continuing so
         later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_audit_installed | default(true) | bool)
-- name: 'StigForge: refresh package facts after ''Ensure auditd is installed'' installed a package (stigforge#83)'
+- name: 'StigForge: refresh package facts after ''Ensure auditd is installed'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -2567,7 +2567,7 @@
         and was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_aide_build_database | default(true) | bool)
 - name: 'StigForge: refresh package facts after ''Build and Test AIDE Database - Ensure AIDE Is Installed'' installed a package
-    (stigforge#83)'
+'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -49735,7 +49735,7 @@
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_accounts_password_pam_pwhistory_enabled | default(true)
     | bool)
 - name: 'StigForge: refresh package facts after ''StigForge supplement - ensure PAM runtime packages (CIS faillock/pwhistory
-    prerequisites)'' installed a package (stigforge#83)'
+    prerequisites)'' installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -50237,7 +50237,7 @@
         independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_nftables_rules_permanent | default(true) | bool)
 - name: 'StigForge: refresh package facts after ''Install nftables so /etc/nftables.conf exists (nftables_rules_permanent)''
-    installed a package (stigforge#83)'
+    installed a package'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -50259,7 +50259,7 @@
         was skipped; continuing so later rules still run. OpenSCAP evaluates the resulting system state independently.'
   when: (stigforge_rules_enabled | default(true) | bool) and (ubuntu24cis_package_auditd_installed | default(true) | bool)
 - name: 'StigForge: refresh package facts after ''Install auditd (hardened images boot with auditing on)'' installed a package
-    (stigforge#83)'
+'
   ansible.builtin.package_facts:
     manager: auto
   tags:
@@ -50747,30 +50747,30 @@
       owner: root
       group: root
       mode: '0640'
-      content: "# StigReady default-deny host firewall (nftables_ensure_default_deny_policy, owner decision 2026-10-19).\n\
-        # All three base chains drop; only the traffic allowed below passes. Add your own service ports here.\ntable inet\
-        \ filter {\n\tchain input {\n\t\ttype filter hook input priority filter; policy drop;\n\t\t# Loopback (set_nftables_loopback_traffic):\
-        \ lo traffic passes, loopback source addresses arriving on any\n\t\t# other interface are spoofed and dropped. Kept\
-        \ first: the SSG check reads this chain only up to the first \"}\".\n\t\tiif \"lo\" accept\n\t\tip saddr 127.0.0.0/8\
-        \ counter drop\n\t\tip6 saddr ::1 counter drop\n\t\t# Replies to connections this host opened. ICMPv4/ICMPv6 errors\
-        \ for those flows (unreachable,\n\t\t# fragmentation-needed / packet-too-big for path MTU discovery, time-exceeded)\
-        \ arrive as related.\n\t\tct state established,related accept\n\t\t# Inbound SSH.\n\t\ttcp dport 22 accept\n\t\t#\
-        \ EC2 needs: DHCPv4 server replies. The lease request is broadcast, so conntrack cannot match the reply.\n\t\tudp\
-        \ sport 67 udp dport 68 accept\n\t\t# EC2 needs: DHCPv6 server replies (IPv6-enabled subnets). The request goes to\
-        \ multicast ff02::1:2, so the\n\t\t# reply is not tracked.\n\t\tudp sport 547 udp dport 546 accept\n\t\t# EC2 needs:\
-        \ IPv6 neighbour discovery (address resolution, duplicate-address detection) and router\n\t\t# advertisements (default\
-        \ route). conntrack does not track these.\n\t\ticmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-advert\
-        \ } accept\n\t}\n\tchain forward {\n\t\t# Not a router: nothing is forwarded.\n\t\ttype filter hook forward priority\
-        \ filter; policy drop;\n\t}\n\tchain output {\n\t\ttype filter hook output priority filter; policy drop;\n\t\t# Loopback\
-        \ (local services, e.g. systemd-resolved on 127.0.0.53).\n\t\toif \"lo\" accept\n\t\t# Replies on connections accepted\
-        \ inbound (SSH) and the rest of flows allowed below.\n\t\tct state established,related accept\n\t\t# DNS (VPC resolver\
-        \ 169.254.169.253 / base+2 or any configured resolver).\n\t\tudp dport 53 accept\n\t\ttcp dport 53 accept\n\t\t# NTP\
-        \ (Amazon Time Sync 169.254.169.123 or public pools).\n\t\tudp dport 123 accept\n\t\t# HTTP/HTTPS: package repositories,\
-        \ EC2 instance metadata (169.254.169.254, fd00:ec2::254), SSM endpoints.\n\t\ttcp dport { 80, 443 } accept\n\t\t#\
-        \ EC2 needs: DHCPv4 lease requests and renewals.\n\t\tudp sport 68 udp dport 67 accept\n\t\t# EC2 needs: DHCPv6 requests\
-        \ (IPv6-enabled subnets).\n\t\tudp sport 546 udp dport 547 accept\n\t\t# EC2 needs: IPv6 neighbour discovery answers/probes\
-        \ and router solicitation at link-up.\n\t\ticmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit\
-        \ } accept\n\t}\n}\n"
+      content: "# StigReady default-deny host firewall (nftables_ensure_default_deny_policy).\n# All three base chains drop;\
+        \ only the traffic allowed below passes. Add your own service ports here.\ntable inet filter {\n\tchain input {\n\t\
+        \ttype filter hook input priority filter; policy drop;\n\t\t# Loopback (set_nftables_loopback_traffic): lo traffic\
+        \ passes, loopback source addresses arriving on any\n\t\t# other interface are spoofed and dropped. Kept first: the\
+        \ SSG check reads this chain only up to the first \"}\".\n\t\tiif \"lo\" accept\n\t\tip saddr 127.0.0.0/8 counter\
+        \ drop\n\t\tip6 saddr ::1 counter drop\n\t\t# Replies to connections this host opened. ICMPv4/ICMPv6 errors for those\
+        \ flows (unreachable,\n\t\t# fragmentation-needed / packet-too-big for path MTU discovery, time-exceeded) arrive as\
+        \ related.\n\t\tct state established,related accept\n\t\t# Inbound SSH.\n\t\ttcp dport 22 accept\n\t\t# EC2 needs:\
+        \ DHCPv4 server replies. The lease request is broadcast, so conntrack cannot match the reply.\n\t\tudp sport 67 udp\
+        \ dport 68 accept\n\t\t# EC2 needs: DHCPv6 server replies (IPv6-enabled subnets). The request goes to multicast ff02::1:2,\
+        \ so the\n\t\t# reply is not tracked.\n\t\tudp sport 547 udp dport 546 accept\n\t\t# EC2 needs: IPv6 neighbour discovery\
+        \ (address resolution, duplicate-address detection) and router\n\t\t# advertisements (default route). conntrack does\
+        \ not track these.\n\t\ticmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-advert } accept\n\t}\n\t\
+        chain forward {\n\t\t# Not a router: nothing is forwarded.\n\t\ttype filter hook forward priority filter; policy drop;\n\
+        \t}\n\tchain output {\n\t\ttype filter hook output priority filter; policy drop;\n\t\t# Loopback (local services,\
+        \ e.g. systemd-resolved on 127.0.0.53).\n\t\toif \"lo\" accept\n\t\t# Replies on connections accepted inbound (SSH)\
+        \ and the rest of flows allowed below.\n\t\tct state established,related accept\n\t\t# DNS (VPC resolver 169.254.169.253\
+        \ / base+2 or any configured resolver).\n\t\tudp dport 53 accept\n\t\ttcp dport 53 accept\n\t\t# NTP (Amazon Time\
+        \ Sync 169.254.169.123 or public pools).\n\t\tudp dport 123 accept\n\t\t# HTTP/HTTPS: package repositories, EC2 instance\
+        \ metadata (169.254.169.254, fd00:ec2::254), SSM endpoints.\n\t\ttcp dport { 80, 443 } accept\n\t\t# EC2 needs: DHCPv4\
+        \ lease requests and renewals.\n\t\tudp sport 68 udp dport 67 accept\n\t\t# EC2 needs: DHCPv6 requests (IPv6-enabled\
+        \ subnets).\n\t\tudp sport 546 udp dport 547 accept\n\t\t# EC2 needs: IPv6 neighbour discovery answers/probes and\
+        \ router solicitation at link-up.\n\t\ticmpv6 type { nd-neighbor-solicit, nd-neighbor-advert, nd-router-solicit }\
+        \ accept\n\t}\n}\n"
     when: '"nftables" in ansible_facts.packages'
     tags:
     - nftables_ensure_default_deny_policy

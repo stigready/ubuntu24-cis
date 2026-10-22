@@ -1,0 +1,9 @@
+{
+  "role": "ubuntu24_cis",
+  "version": "0.3.48",
+  "matrix_status": "green",
+  "factory_commit": "055cf3a4a0bb0069f7b8dfc298fc7075514fb561",
+  "content_digest": "625960aae26ee760f5d0efd2ebc12b1b3508380cd85fed4fc6e44fd377a6e4f2",
+  "container_verify": "removed-0017",
+  "compliance_evidence": "Not produced here. Container verify was removed because a container cannot evaluate most STIG rules; compliance evidence for this role comes from the StigReady AMI build that consumes it."
+}

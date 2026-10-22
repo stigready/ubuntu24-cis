@@ -2,7 +2,7 @@
 
 **Ansible hardening role** for **Ubuntu 24.04 LTS** (CIS Benchmark). Suitable for playbooks, Packer/Ansible provisioners, and golden-image pipelines. Search keywords: `ansible`, `ansible-role`, `cis`, `cis-benchmark`, `cis-hardening`, `compliance`, `devsecops`, `hardening`, `infrastructure`, `noble`, `openscap`, `security`, `stigforge`, `ubuntu`.
 
-StigForge-exported Ansible role **`ubuntu24_cis`** · release **`0.3.47`**.
+StigForge-exported Ansible role **`ubuntu24_cis`** · release **`0.3.48`**.
 Matrix cell status: **`green`**.
 
 ## Install (Ansible Galaxy)
@@ -13,7 +13,7 @@ lives under `compliance/` and is not loaded when the role runs.
 From **Ansible Galaxy** (after import; namespace `stigready`):
 
 ```bash
-ansible-galaxy role install stigready.ubuntu24_cis,0.3.47
+ansible-galaxy role install stigready.ubuntu24_cis,0.3.48
 ```
 
 From **GitHub** (public):
@@ -23,7 +23,7 @@ From **GitHub** (public):
 roles:
   - src: https://github.com/stigready/ubuntu24-cis
     scm: git
-    version: v0.3.47   # or an immutable commit SHA
+    version: v0.3.48   # or an immutable commit SHA
     name: ubuntu24_cis
 ```
 
@@ -34,24 +34,23 @@ ansible-playbook -i inventory site.yml   # role: ubuntu24_cis
 
 ## Verification status (this release)
 
-Scores are OpenSCAP results for this role, recorded by the factory pipeline run cited below (decision 0017: a green matrix cell alone is not evidence).
+Scores are OpenSCAP results for this role, recorded by the factory pipeline run cited below.
 
 | Profile | Score | Floor | Gate | Ansible | Evidence tested (UTC) |
 |---|---:|---:|---|---|---|
 
 ## Exceptions (excluded from the score gate)
 
-These rules are excluded from the OpenSCAP score gate. Most depend on the network or organisation the AMI is deployed into, so the role leaves them to the AMI owner; where the role does enforce a control and only the scanner cannot confirm it, the table says so. Each is tracked in `policy/products/` of [stigforge](https://github.com/stigready/stigforge) and listed in the image's POA&M. The shared cloud policy (`policy/cloud-ami.yml`) strips a further documented set (for example the bootloader password and smartcard rules).
+These rules are excluded from the OpenSCAP score gate. Most depend on the network or organisation the AMI is deployed into, so the role leaves them to the AMI owner; where the role does enforce a control and only the scanner cannot confirm it, the table says so. Each is tracked in `policy/products/` of [stigforge] and listed in the image's POA&M. The shared cloud policy (`policy/cloud-ami.yml`) strips a further documented set (for example the bootloader password and smartcard rules).
 
 | Rule | Requirement | What this role does | What the AMI owner does |
 |---|---|---|---|
 | `kernel_module_overlayfs_disabled` | CIS Level 2: Ensure overlayfs kernel module is not available | Does not block the overlay module: no `install overlay /bin/false` and no blacklist line. The generated SSG tasks that wrote /etc/modprobe.d/overlay.conf are stripped. | Where no container runtime is used, add `install overlayfs /bin/false` to /etc/modprobe.d/overlayfs.conf, as the CIS control states. |
 
-Full artifacts per profile: `compliance/releases/0.3.47/<profile>/` (`score.json`, `results.xml`, `arf.xml`, `evidence.json`, `evidence-report.html`, `poam.md`).
+Full artifacts per profile: `compliance/releases/0.3.48/<profile>/` (`score.json`, `results.xml`, `arf.xml`, `evidence.json`, `evidence-report.html`, `poam.md`).
 
 ## Reports & review
 
-- **[REVIEW.md](REVIEW.md)** — linked evidence index for product owner review
 - **[reports/index.html](reports/index.html)** — HTML report index
 - **[CHANGELOG.md](CHANGELOG.md)** — release notes and verify summary
 
@@ -60,7 +59,7 @@ Full artifacts per profile: `compliance/releases/0.3.47/<profile>/` (`score.json
 Re-run OpenSCAP in Docker and compare to this release's evidence:
 
 ```bash
-make prove RELEASE=0.3.47
+make prove RELEASE=0.3.48
 ```
 
 Or score your own `results.xml`: see **[compliance/README.md](compliance/README.md)**.
@@ -70,9 +69,7 @@ Or score your own `results.xml`: see **[compliance/README.md](compliance/README.
 - **[LICENSE](LICENSE)** (MIT) — StigForge export packaging
 - **[NOTICE](NOTICE)** — ComplianceAsCode / BSD-3-Clause task body attribution
 
-## Factory
+## Catalog
 
-- Monorepo: [stigready/stigforge](https://github.com/stigready/stigforge) @ `d6a710db55ff9317d77d7d2060ffc1d0b078ca90`
-- CI run: https://github.com/stigready/stigforge/actions/runs/39518140044
-- Catalog: [https://stigready.com/#stigforge](https://stigready.com/#stigforge)
+- [https://stigready.com/#stigforge](https://stigready.com/#stigforge)
 

@@ -62,20 +62,6 @@
   tags:
     - accounts_passwords_pam_faillock_unlock_time
 
-# accounts_passwords_pam_faillock_enabled -- CIS Ubuntu 24.04 5.3.2.2 / Debian 12 5.3.2.2:
-# "Ensure pam_faillock module is enabled". The CIS remediation on Debian-family is two
-# pam-auth-update profiles, not edits to common-auth. The previous version of this supplement
-# appended `[default=die] pam_faillock.so authfail` to the END of common-auth (lineinfile with
-# no insert anchor), which is AFTER pam_permit on the success path: a correct password
-# reached authfail, was recorded as a failure, and the stack died. Every password
-# authentication failed (sudo -S, su, console) -- stigforge#84, found by the stigvalidated
-# lane on 2026-09-24. The SSG OVAL check only requires preauth...pam_unix...authfail in that
-# order anywhere in the file, so the broken file scored as a pass.
-#
-# pam-auth-update places the entries by Priority inside the Primary block: preauth (1024)
-# before pam_unix (256), authfail (0) immediately after it, and `account required
-# pam_faillock.so` in common-account. That is the stack CIS describes and the one that
-# lets a correct password through.
 - name: StigForge supplement - pam-auth-update profile for pam_faillock authfail (accounts_passwords_pam_faillock_enabled)
   ansible.builtin.copy:
     dest: /usr/share/pam-configs/faillock
@@ -446,11 +432,6 @@
   tags:
     - all_apparmor_profiles_in_enforce_complain_mode
 
-# Two profiles (busybox, nautilus) are loaded in the kernel as unconfined with NO definition on disk (diagnostic build,
-# stigready#4423, issue #113), so there is no file for the complain rewrite above to find, and a reload does not unload
-# a profile whose file is gone. Remove from the kernel exactly those: still unconfined after the reload AND defined
-# nowhere under /etc/apparmor.d or snapd's profile directory. This is what aa-remove-unknown does, without needing
-# apparmor-utils. A profile that has a definition is never touched here.
 - name: Unload unconfined AppArmor profiles that have no definition on disk (all_apparmor_profiles_in_enforce_complain_mode)
   ansible.builtin.shell: |
     set -eu
@@ -515,17 +496,6 @@
   tags:
     - nftables_rules_permanent
 
-# nftables_ensure_default_deny_policy (CIS 4.3.x, "Ensure nftables default deny firewall policy"). Owner decision 2026-10-19:
-# "Meet it: drop-all + explicit allows". ubuntu-24.04:cis-l1 leg 3aa7c4fe55c4 failed it: the SCE check reads `nft list ruleset`
-# and needs `policy drop` on the input, forward AND output hooks. nftables is the image's only firewall (ufw is removed), and
-# nftables.service (service_nftables_enabled) loads /etc/nftables.conf -> /etc/nftables.rules at every boot, so the ruleset is
-# written there: same table (inet filter) and chain names (input/forward/output) the generated set_nftables_* tasks use, and the
-# loopback rules of set_nftables_loopback_traffic, so those rules keep passing at runtime and after a reboot.
-# The allows are the approved set (established/related, loopback, inbound SSH, outbound DNS/NTP/HTTP/HTTPS) plus only what an EC2
-# instance needs to keep its address and route (DHCPv4, DHCPv6, IPv6 neighbour discovery); each is explained in the file. Any other
-# port (application listeners, outbound SMTP, ...) is the customer's to add to /etc/nftables.rules.
-# The generated "Add Base Chains" task (var_nftables_base_chain_policies, accept) runs before this supplement; the atomic load
-# below replaces whatever it left in the running ruleset, so the play ends with the persisted ruleset live.
 - name: Write /etc/nftables.rules with the default-deny ruleset (nftables_ensure_default_deny_policy)
   ansible.builtin.copy:
     dest: /etc/nftables.rules
@@ -533,7 +503,7 @@
     group: root
     mode: "0640"
     content: |
-      # StigReady default-deny host firewall (nftables_ensure_default_deny_policy, owner decision 2026-10-19).
+      # StigReady default-deny host firewall (nftables_ensure_default_deny_policy).
       # All three base chains drop; only the traffic allowed below passes. Add your own service ports here.
       table inet filter {
       	chain input {
