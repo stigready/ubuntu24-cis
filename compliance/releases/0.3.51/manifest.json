@@ -1,0 +1,9 @@
+{
+  "role": "ubuntu24_cis",
+  "version": "0.3.51",
+  "matrix_status": "green",
+  "factory_commit": "8e25cfbe2f728d01f4a83e9ecd222c5f20fae225",
+  "content_digest": "e4f0346f291b279a941f98553b3765468b847f01942e85721363d210966f2a45",
+  "container_verify": "removed-0017",
+  "compliance_evidence": "Not produced here. Container verify was removed because a container cannot evaluate most hardening rules. No OpenSCAP results ship with this release. A StigReady AMI build that pins this role version scores the image it builds."
+}

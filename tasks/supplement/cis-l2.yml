@@ -520,16 +520,19 @@
 
 # auditd_data_* (CIS 6.3.2.x). A halted instance can be restarted and inspected from the EC2 console; single-user mode on a
 # cloud instance with no console would be unreachable, so halt is used where the profile offers halt|single.
+# The two actions that stop the host read the SSG variable names the EL roles already expose, so a customer who chooses availability
+# over the benchmark can set them (README "Before you run this role"). The defaults are the profile's values; anything other than
+# halt|single (disk_full) or halt (admin_space_left) fails the CIS rule. `.split('|')[0]` keeps a profile-style "a|b" value valid.
 - name: Configure auditd.conf actions and retention (auditd_data_*)
   ansible.builtin.lineinfile:
     path: /etc/audit/auditd.conf
     regexp: '^\s*#?\s*{{ item.key }}\s*='
     line: '{{ item.key }} = {{ item.value }}'
   loop:
-    - {key: disk_full_action, value: halt}
+    - {key: disk_full_action, value: "{{ (var_auditd_disk_full_action | default('halt')).split('|')[0] }}"}
     - {key: disk_error_action, value: syslog}
     - {key: space_left_action, value: email}
-    - {key: admin_space_left_action, value: halt}
+    - {key: admin_space_left_action, value: "{{ (var_auditd_admin_space_left_action | default('halt')).split('|')[0] }}"}
     - {key: max_log_file_action, value: keep_logs}
     - {key: action_mail_acct, value: root}
   loop_control:
